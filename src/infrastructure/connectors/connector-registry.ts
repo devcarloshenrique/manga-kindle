@@ -1,5 +1,6 @@
 import type { IMangaConnector } from '../../domain/interfaces/index.js';
 import { MangaLivreConnector } from './mangalivre-connector.js';
+import { MangaDexConnector } from './mangadex-connector.js';
 
 /**
  * Registry de conectores disponíveis
@@ -12,6 +13,7 @@ export class ConnectorRegistry {
   private constructor() {
     // Registra conectores padrão
     this.register(new MangaLivreConnector());
+    this.register(new MangaDexConnector());
   }
 
   static getInstance(): ConnectorRegistry {

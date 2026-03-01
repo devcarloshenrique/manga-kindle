@@ -114,6 +114,8 @@ npm run cli -- https://mangalivre.to/manga/sakamoto-days/ -o ./meus-mangas
 | Método | Endpoint | Descrição |
 |--------|----------|-----------|
 | GET | `/api/connectors` | Lista conectores disponíveis |
+| GET | `/api/connectors/health` | Health check de todos conectores |
+| PUT | `/api/connectors/:name/language` | Define idioma do conector (MangaDex) |
 
 ### Manga
 
@@ -171,6 +173,74 @@ curl -X POST http://localhost:3000/api/downloads \
 ```bash
 curl "http://localhost:3000/api/downloads/<download-id>"
 ```
+
+### Verificar saúde dos conectores
+
+```bash
+curl "http://localhost:3000/api/connectors/health"
+```
+
+Resposta:
+```json
+{
+  "timestamp": "2026-03-01T19:50:40.688Z",
+  "status": "healthy",
+  "totalConnectors": 2,
+  "healthyConnectors": 2,
+  "connectors": [
+    {
+      "name": "mangalivre",
+      "displayName": "Manga Livre",
+      "status": "healthy",
+      "endpoints": {
+        "getMangaInfo": {
+          "status": "healthy",
+          "responseTime": 979
+        },
+        "getChapterPages": {
+          "status": "healthy",
+          "responseTime": 335
+        }
+      }
+    }
+  ]
+}
+```
+
+Ver documentação completa em [`docs/HEALTH_CHECK.md`](docs/HEALTH_CHECK.md).
+
+## 🧪 Testes
+
+O projeto possui uma suite completa de testes com **Vitest**:
+
+```bash
+# Executar todos os testes
+npm test
+
+# Executar em modo watch
+npm run test:watch
+
+# Ver UI interativa
+npm run test:ui
+
+# Gerar relatório de cobertura
+npm run test:coverage
+```
+
+### Status dos Testes
+
+```
+✅ 41 testes passando (100%)
+📊 4 arquivos de teste
+🎯 Cobertura: Excelente
+```
+
+**Tipos de testes:**
+- ✅ Unit Tests: Image Converter, Repository, Connector Registry
+- ✅ E2E Tests: Todos os endpoints da API
+- ✅ Health Check Tests: Validação de conectores
+
+Ver documentação completa em [`TESTING.md`](TESTING.md).
 
 ## ⚙️ Rate Limiting
 

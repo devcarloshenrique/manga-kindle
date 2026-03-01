@@ -46,14 +46,14 @@ export interface RateLimiterConfig {
 export const DEFAULT_RATE_LIMITS: Record<string, RateLimiterConfig> = {
   mangalivre: {
     maxConcurrent: 2,
-    minTime: 1000, // 1 segundo entre requisições
+    minTime: 50, // 50ms entre requisições
     maxQueued: 100,
     errorPenalty: 5000,
     maxRetries: 3
   },
   default: {
     maxConcurrent: 1,
-    minTime: 2000, // 2 segundos entre requisições (conservador)
+    minTime: 500, // 500ms entre requisições (conservador)
     maxQueued: 50,
     errorPenalty: 10000,
     maxRetries: 3

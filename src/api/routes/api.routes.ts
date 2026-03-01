@@ -66,6 +66,18 @@ router.delete('/downloads/:id', asyncHandler(downloadController.cancelDownload))
  */
 router.get('/connectors', asyncHandler(systemController.listConnectors));
 
+/**
+ * GET /api/connectors/health
+ * Health check de todos os conectores
+ */
+router.get('/connectors/health', asyncHandler(systemController.checkConnectorsHealth));
+
+/**
+ * PUT /api/connectors/:name/language
+ * Define o idioma de um conector
+ */
+router.put('/connectors/:name/language', asyncHandler(systemController.setConnectorLanguage));
+
 // ========================================
 // System Routes
 // ========================================

@@ -137,7 +137,8 @@ async function main(): Promise<void> {
           url,
           outputDir,
           startChapter,
-          endChapter
+          endChapter,
+          imageFormat: 'original'
         },
         {
           onChapterStart: (chapterNum, current, total) => {

@@ -10,7 +10,7 @@ export class MangaLivreConnector extends BaseMangaConnector {
   readonly name = 'mangalivre';
   readonly displayName = 'Manga Livre';
   readonly baseUrl = 'https://mangalivre.to';
-  readonly urlPattern = /mangalivre\.to\/manga\//;
+  readonly urlPattern = /mangalivre\.(to|net)\/manga\//;
 
   constructor(config: ConnectorConfig = {}) {
     super({

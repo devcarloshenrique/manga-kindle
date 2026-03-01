@@ -4,6 +4,7 @@ import {
   getDownloadChapterHandler,
   getDownloadRepository
 } from '../../application/features/download/index.js';
+import { ConnectorRegistry, MangaDexConnector } from '../../infrastructure/connectors/index.js';
 
 /**
  * @swagger
@@ -13,6 +14,10 @@ import {
  *     description: |
  *       Inicia o download de todos os capítulos de um mangá em background.
  *       O download é assíncrono e você pode acompanhar o progresso pelo endpoint de status.
+ *       
+ *       Se `endChapter` não for informado, baixa todos os capítulos a partir de `startChapter`.
+ *       
+ *       Para MangaDex, você pode especificar o idioma desejado com o parâmetro `language`.
  *     tags: [Download]
  *     requestBody:
  *       required: true
@@ -39,8 +44,17 @@ import {
  *                 minimum: 1
  *               endChapter:
  *                 type: integer
- *                 description: Número do capítulo final (opcional)
+ *                 description: Número do capítulo final. Se não informado, baixa todos os capítulos.
  *                 minimum: 1
+ *               imageFormat:
+ *                 type: string
+ *                 enum: [original, webp, jpeg, jpg, png]
+ *                 description: Formato de saída das imagens
+ *                 default: original
+ *               language:
+ *                 type: string
+ *                 description: Idioma dos capítulos para MangaDex (pt-br, en, es, etc)
+ *                 example: pt-br
  *     responses:
  *       200:
  *         description: Download iniciado com sucesso
@@ -66,7 +80,7 @@ import {
  *               $ref: '#/components/schemas/Error'
  */
 export async function startMangaDownload(req: Request, res: Response): Promise<void> {
-  const { url, outputDir, startChapter, endChapter } = req.body;
+  const { url, outputDir, startChapter, endChapter, imageFormat, language } = req.body;
 
   if (!url) {
     res.status(400).json({
@@ -75,10 +89,20 @@ export async function startMangaDownload(req: Request, res: Response): Promise<v
       example: {
         url: 'https://mangalivre.to/manga/sakamoto-days/',
         startChapter: 1,
-        endChapter: 10
+        endChapter: 10,
+        imageFormat: 'original',
+        language: 'pt-br'
       }
     });
     return;
+  }
+
+  // Se for MangaDex e um idioma foi especificado, configura o conector
+  if (language && url.includes('mangadex.org')) {
+    const connector = ConnectorRegistry.getInstance().get('mangadex') as MangaDexConnector;
+    if (connector) {
+      connector.setLanguage(language);
+    }
   }
 
   const handler = getDownloadMangaHandler();
@@ -86,7 +110,9 @@ export async function startMangaDownload(req: Request, res: Response): Promise<v
     url,
     outputDir: outputDir || './downloads',
     startChapter: startChapter || 1,
-    endChapter
+    endChapter, // undefined = baixa todos
+    imageFormat: imageFormat || 'original',
+    language
   });
 
   res.json(result);

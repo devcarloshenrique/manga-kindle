@@ -4,6 +4,7 @@ import path from 'path';
 import pLimit from 'p-limit';
 import { ConnectorRegistry } from '../../../infrastructure/connectors/index.js';
 import { InMemoryDownloadRepository } from '../../../infrastructure/repositories/index.js';
+import { convertImage, type ImageFormat } from '../../../infrastructure/utils/index.js';
 import type { Download, DownloadResult, DownloadError, Chapter, Page } from '../../../domain/entities/index.js';
 
 /**
@@ -13,7 +14,9 @@ export const DownloadMangaRequestSchema = z.object({
   url: z.string().url('URL inválida'),
   outputDir: z.string().default('./downloads'),
   startChapter: z.number().positive().default(1),
-  endChapter: z.number().positive().optional()
+  endChapter: z.number().positive().optional(), // Se não informado, baixa todos
+  imageFormat: z.enum(['original', 'webp', 'jpeg', 'jpg', 'png']).default('original'),
+  language: z.string().optional() // Para conectores que suportam múltiplos idiomas (ex: MangaDex)
 });
 
 export type DownloadMangaRequest = z.infer<typeof DownloadMangaRequestSchema>;
@@ -156,7 +159,8 @@ export class DownloadMangaHandler {
             connector,
             chapter,
             download.outputDirectory,
-            (current, total) => {
+            options.imageFormat as ImageFormat,
+            (current: number, total: number) => {
               download.progress.currentChapterImages = current;
               download.progress.totalChapterImages = total;
               this.repository.update(download); // Atualiza progresso das imagens
@@ -217,6 +221,7 @@ export class DownloadMangaHandler {
     connector: NonNullable<ReturnType<typeof ConnectorRegistry.getInstance.prototype.findByUrl>>,
     chapter: Chapter,
     outputDir: string,
+    imageFormat: ImageFormat = 'original',
     onProgress?: (current: number, total: number) => void
   ): Promise<DownloadResult> {
     // Obtém páginas do capítulo
@@ -236,12 +241,15 @@ export class DownloadMangaHandler {
 
     const downloadPromises = content.pages.map((page: Page) => {
       return limit(async () => {
-        const ext = path.extname(page.url).split('?')[0] || '.webp';
-        const fileName = `${String(page.number).padStart(3, '0')}${ext}`;
+        const imageBuffer = await connector.downloadImage(page.url);
+        
+        // Converte a imagem se necessário
+        const { buffer, extension } = await convertImage(imageBuffer, { format: imageFormat });
+        
+        const fileName = `${String(page.number).padStart(3, '0')}${extension}`;
         const filePath = path.join(chapterDir, fileName);
 
-        const imageBuffer = await connector.downloadImage(page.url);
-        await fs.writeFile(filePath, imageBuffer);
+        await fs.writeFile(filePath, buffer);
 
         downloaded++;
         onProgress?.(downloaded, content.pages.length);
