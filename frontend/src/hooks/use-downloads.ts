@@ -1,82 +1,43 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { downloadService } from '@/services';
-import type { Download, StartDownloadRequest } from '@/services/types';
+import { useEffect } from 'react';
+import { useDownloadStore } from '@/stores';
 
+/**
+ * Thin wrapper around DownloadStore.
+ * Automatically fetches downloads on first mount.
+ * State is persisted globally via DownloadProvider — survives navigation.
+ */
 export function useDownloads() {
-  const [downloads, setDownloads] = useState<Download[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const store = useDownloadStore();
 
-  const fetchDownloads = useCallback(async () => {
-    try {
-      const data = await downloadService.list();
-      setDownloads(data.downloads);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao listar downloads';
-      setError(message);
-    }
-  }, []);
-
-  const startDownload = useCallback(
-    async (request: StartDownloadRequest) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await downloadService.start(request);
-        await fetchDownloads();
-        return result;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Erro ao iniciar download';
-        setError(message);
-        return null;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchDownloads],
-  );
-
-  const cancelDownload = useCallback(
-    async (id: string) => {
-      try {
-        await downloadService.cancel(id);
-        await fetchDownloads();
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Erro ao cancelar download';
-        setError(message);
-      }
-    },
-    [fetchDownloads],
-  );
-
-  const startPolling = useCallback(
-    (intervalMs: number = 3000) => {
-      if (intervalRef.current) return;
-      intervalRef.current = setInterval(fetchDownloads, intervalMs);
-    },
-    [fetchDownloads],
-  );
-
-  const stopPolling = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
+  // Fetch on first mount (idempotent – store deduplicates)
   useEffect(() => {
-    return () => stopPolling();
-  }, [stopPolling]);
+    store.fetchDownloads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
-    downloads,
-    loading,
-    error,
-    fetchDownloads,
-    startDownload,
-    cancelDownload,
-    startPolling,
-    stopPolling,
+    // Data
+    downloads: store.downloads,
+    activeDownloads: store.activeDownloads,
+    hasActiveDownloads: store.hasActiveDownloads,
+
+    // Loading states
+    loading: store.listLoading,
+    startingDownload: store.startingDownload,
+
+    // Errors
+    listError: store.listError,
+    clearListError: store.clearListError,
+    getItemError: (id: string) => store.getItem(id)?.error ?? null,
+
+    // Actions
+    fetchDownloads: store.fetchDownloads,
+    startDownload: store.startDownload,
+    cancelDownload: store.cancelDownload,
+    retryDownload: store.retryDownload,
+    clearError: store.clearError,
+
+    // Item accessor
+    getItem: store.getItem,
   };
 }

@@ -30,7 +30,7 @@ export function MangaDetail() {
   const navigate = useNavigate();
   const mangaUrl = searchParams.get('url') || '';
   const { manga, loading, error, fetchMangaInfo } = useManga();
-  const { startDownload, loading: downloadLoading } = useDownloads();
+  const { startDownload, startingDownload } = useDownloads();
 
   const [startChapter, setStartChapter] = useState('1');
   const [endChapter, setEndChapter] = useState('');
@@ -58,6 +58,8 @@ export function MangaDetail() {
         description: `ID: ${result.downloadId}`,
       });
       navigate(ROUTES.DOWNLOADS);
+    } else {
+      toast.error('Falha ao iniciar download');
     }
   };
 
@@ -141,9 +143,9 @@ export function MangaDetail() {
                     options={IMAGE_FORMATS.map((f) => ({ value: f, label: f.toUpperCase() }))}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={downloadLoading}>
+                <Button type="submit" className="w-full" disabled={startingDownload}>
                   <Download className="h-4 w-4" />
-                  {downloadLoading ? 'Iniciando...' : 'Iniciar Download'}
+                  {startingDownload ? 'Iniciando...' : 'Iniciar Download'}
                 </Button>
               </form>
             </CardContent>
