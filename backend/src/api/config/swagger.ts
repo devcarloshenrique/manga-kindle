@@ -53,6 +53,14 @@ Cada conector tem configurações específicas de delay e concorrência.
       description: 'Informações sobre conectores disponíveis'
     },
     {
+      name: 'Library',
+      description: 'Gerenciamento da biblioteca local de mangás baixados'
+    },
+    {
+      name: 'KCC',
+      description: 'Kindle Comic Converter - Conversão de mangás para e-readers'
+    },
+    {
       name: 'System',
       description: 'Informações do sistema e health check'
     }
@@ -195,6 +203,248 @@ Cada conector tem configurações específicas de delay e concorrência.
           errorCount: { type: 'integer', description: 'Total de erros' },
           lastErrorTime: { type: 'integer', description: 'Timestamp do último erro' }
         }
+      },
+      // ========================================
+      // KCC Schemas
+      // ========================================
+      KccProfile: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', example: 'KPW5' },
+          name: { type: 'string', example: 'Kindle Paperwhite 5' },
+          resolution: { type: 'string', example: '1236x1648' },
+          device: { type: 'string', example: 'Kindle Paperwhite 5th Gen (2021)' },
+          supportedFormats: { 
+            type: 'array', 
+            items: { type: 'string' },
+            example: ['EPUB', 'MOBI', 'KFX']
+          }
+        },
+        required: ['id', 'name', 'resolution', 'device', 'supportedFormats']
+      },
+      KccOptionDoc: {
+        type: 'object',
+        properties: {
+          description: { type: 'string', example: 'Use manga reading mode (right-to-left)' },
+          type: { type: 'string', enum: ['boolean', 'number', 'string'], example: 'boolean' },
+          default: { oneOf: [{ type: 'boolean' }, { type: 'number' }, { type: 'string' }] },
+          cliFlag: { type: 'string', example: '-m, --manga-style' },
+          example: { oneOf: [{ type: 'boolean' }, { type: 'number' }, { type: 'string' }] }
+        },
+        required: ['description', 'type', 'cliFlag']
+      },
+      ConversionOptions: {
+        type: 'object',
+        description: 'KCC conversion options (all optional)',
+        properties: {
+          mangaStyle: { type: 'boolean', description: 'Manga reading mode (RTL)', default: false },
+          hq: { type: 'boolean', description: 'High quality mode', default: false },
+          webtoonMode: { type: 'boolean', description: 'Webtoon/vertical scroll mode', default: false },
+          noSplitDoubleSpreads: { type: 'boolean', description: 'Keep double-page spreads intact', default: false },
+          rotate: { type: 'boolean', description: 'Auto-rotate wide images', default: false },
+          upscale: { type: 'boolean', description: 'Upscale small images', default: false },
+          stretch: { type: 'boolean', description: 'Stretch images to fill screen', default: false },
+          gamma: { type: 'number', description: 'Gamma correction (0.1-5.0)', minimum: 0.1, maximum: 5.0 },
+          cropping: { type: 'number', description: 'Auto-crop margins (0-2)', minimum: 0, maximum: 2, default: 2 },
+          quality: { type: 'number', description: 'Image quality (0-100)', minimum: 0, maximum: 100 }
+        }
+      },
+      ConversionRequest: {
+        type: 'object',
+        required: ['chapters', 'outputFormat', 'profile'],
+        properties: {
+          chapters: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Chapter paths relative to downloads folder',
+            example: ['vagabond/Capitulo_0001', 'vagabond/Capitulo_0002']
+          },
+          mergeIntoSingleVolume: { 
+            type: 'boolean', 
+            default: false,
+            description: 'Merge all chapters into single output file'
+          },
+          outputFormat: { 
+            type: 'string', 
+            enum: ['EPUB', 'MOBI', 'CBZ', 'KFX'],
+            example: 'EPUB'
+          },
+          profile: { 
+            type: 'string', 
+            example: 'KPW5',
+            description: 'Target device profile'
+          },
+          options: { '$ref': '#/components/schemas/ConversionOptions' }
+        }
+      },
+      MangaConversionRequest: {
+        type: 'object',
+        required: ['mangaSlug', 'outputFormat', 'profile'],
+        properties: {
+          mangaSlug: {
+            type: 'string',
+            description: 'The manga slug/identifier',
+            example: 'one-piece'
+          },
+          mergeIntoVolumes: {
+            type: 'boolean',
+            default: false,
+            description: 'Group chapters into volumes'
+          },
+          chaptersPerVolume: {
+            type: 'integer',
+            default: 10,
+            minimum: 1,
+            maximum: 100,
+            description: 'Chapters per volume when mergeIntoVolumes is true'
+          },
+          singleVolume: {
+            type: 'boolean',
+            default: false,
+            description: 'Merge ALL chapters into one file'
+          },
+          outputFormat: { 
+            type: 'string', 
+            enum: ['EPUB', 'MOBI', 'CBZ', 'KFX'],
+            example: 'EPUB'
+          },
+          profile: { 
+            type: 'string', 
+            example: 'KPW5',
+            description: 'Target device profile'
+          },
+          options: { '$ref': '#/components/schemas/ConversionOptions' }
+        }
+      },
+      KccJob: {
+        type: 'object',
+        properties: {
+          jobId: { type: 'string', example: 'kcc-job-abc123' },
+          status: { 
+            type: 'string', 
+            enum: ['waiting', 'active', 'completed', 'failed', 'cancelled'],
+            example: 'waiting'
+          },
+          progress: { type: 'number', minimum: 0, maximum: 100, example: 0 },
+          chapters: { 
+            type: 'array', 
+            items: { type: 'string' },
+            example: ['vagabond/Capitulo_0001']
+          },
+          outputFormat: { type: 'string', example: 'EPUB' },
+          profile: { type: 'string', example: 'KPW5' },
+          outputFile: { type: 'string', nullable: true, example: 'vagabond-Capitulo_0001.epub' },
+          createdAt: { type: 'string', format: 'date-time' },
+          startedAt: { type: 'string', format: 'date-time', nullable: true },
+          completedAt: { type: 'string', format: 'date-time', nullable: true },
+          error: { type: 'string', nullable: true }
+        },
+        required: ['jobId', 'status', 'chapters', 'outputFormat', 'profile']
+      },
+      KccJobDetails: {
+        allOf: [
+          { '$ref': '#/components/schemas/KccJob' },
+          {
+            type: 'object',
+            properties: {
+              options: { '$ref': '#/components/schemas/ConversionOptions' },
+              volumeName: { type: 'string', nullable: true },
+              logs: { 
+                type: 'array', 
+                items: { type: 'string' },
+                description: 'Conversion log messages'
+              }
+            }
+          }
+        ]
+      },
+      ConvertedFile: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', example: 'vagabond-Capitulo_0001.epub' },
+          format: { type: 'string', enum: ['EPUB', 'MOBI', 'CBZ', 'KFX'], example: 'EPUB' },
+          size: { type: 'string', example: '15.2 MB' },
+          sizeBytes: { type: 'integer', example: 15938560 },
+          profile: { type: 'string', example: 'KPW5' },
+          createdAt: { type: 'string', format: 'date-time' },
+          manga: { type: 'string', example: 'vagabond' }
+        },
+        required: ['name', 'format', 'size', 'sizeBytes', 'createdAt']
+      },
+      ConvertedFileDetails: {
+        allOf: [
+          { '$ref': '#/components/schemas/ConvertedFile' },
+          {
+            type: 'object',
+            properties: {
+              chapters: { 
+                type: 'array', 
+                items: { type: 'string' },
+                example: ['Capitulo_0001', 'Capitulo_0002']
+              },
+              path: { type: 'string', example: '/converted/vagabond-Capitulo_0001.epub' }
+            }
+          }
+        ]
+      },
+      // ========================================
+      // Library Schemas
+      // ========================================
+      LibraryManga: {
+        type: 'object',
+        properties: {
+          slug: { type: 'string', example: 'vagabond' },
+          title: { type: 'string', example: 'Vagabond' },
+          chapterCount: { type: 'integer', example: 327 },
+          totalPages: { type: 'integer', example: 6540 },
+          hasConverted: { type: 'boolean', example: true },
+          language: { type: 'string', example: 'pt-br' },
+          status: { type: 'string', enum: ['ongoing', 'completed', 'hiatus', 'unknown'] },
+          lastDownloaded: { type: 'string', format: 'date-time' }
+        },
+        required: ['slug', 'title', 'chapterCount']
+      },
+      LibraryChapter: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', example: 'Capitulo_0001' },
+          path: { type: 'string', example: 'downloads/vagabond/Capitulo_0001' },
+          pageCount: { type: 'integer', example: 53 },
+          converted: { type: 'boolean', example: false },
+          convertedFile: { type: 'string', nullable: true },
+          downloadedAt: { type: 'string', format: 'date-time' }
+        },
+        required: ['name', 'path', 'pageCount']
+      },
+      // ========================================
+      // Standard API Response Schemas
+      // ========================================
+      ErrorResponse: {
+        type: 'object',
+        properties: {
+          data: { type: 'null' },
+          error: {
+            type: 'object',
+            properties: {
+              message: { type: 'string', example: 'Resource not found' },
+              code: { type: 'string', example: 'NOT_FOUND' },
+              details: { type: 'object' }
+            },
+            required: ['message']
+          }
+        },
+        required: ['data', 'error']
+      },
+      PaginationMeta: {
+        type: 'object',
+        properties: {
+          page: { type: 'integer', example: 1 },
+          limit: { type: 'integer', example: 20 },
+          total: { type: 'integer', example: 100 },
+          totalPages: { type: 'integer', example: 5 },
+          hasMore: { type: 'boolean', example: true }
+        },
+        required: ['page', 'limit', 'total', 'totalPages', 'hasMore']
       }
     }
   }

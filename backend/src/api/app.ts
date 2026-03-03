@@ -2,9 +2,10 @@ import express, { type Express } from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import { swaggerOptions } from './config/index.js';
-import { apiRoutes } from './routes/index.js';
+import { apiRoutes, kccRoutes, libraryRoutes } from './routes/index.js';
 import { errorHandler, notFoundHandler, asyncHandler } from './middleware/index.js';
 import { getApiInfo } from './controllers/system.controller.js';
+import { startKccWorker } from '../application/features/kcc/kcc.queue.js';
 
 /**
  * Cria e configura a aplicação Express
@@ -46,6 +47,19 @@ export function createApp(): Express {
 
   // API routes
   app.use('/api', apiRoutes);
+  
+  // KCC routes
+  app.use('/api/kcc', kccRoutes);
+  
+  // Library routes
+  app.use('/api/library', libraryRoutes);
+
+  // Start KCC worker (if Redis is available)
+  try {
+    startKccWorker();
+  } catch (err) {
+    console.warn('[KCC] Worker not started (Redis may not be available):', (err as Error).message);
+  }
 
   // 404 handler
   app.use(notFoundHandler);
