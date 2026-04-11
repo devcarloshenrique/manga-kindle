@@ -17,5 +17,19 @@ export { Separator } from './separator';
 
 export { ScrollArea } from './scroll-area';
 
-export { Select } from './select';
-export type { SelectProps } from './select';
+export {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectScrollDownButton,
+	SelectScrollUpButton,
+	SelectSeparator,
+	SelectTrigger,
+	SelectValue,
+} from './select';
+
+export { Checkbox } from './checkbox';
+export { Switch } from './switch';
+export { Slider } from './slider';

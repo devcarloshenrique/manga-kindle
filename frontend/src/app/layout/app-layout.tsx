@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   BookOpen,
   Download,
+  FolderKanban,
   Home,
   Menu,
   Plug,
@@ -18,6 +19,7 @@ const navItems = [
   { to: ROUTES.HOME, icon: Home, label: 'Dashboard' },
   { to: ROUTES.SEARCH, icon: Search, label: 'Buscar Manga' },
   { to: ROUTES.DOWNLOADS, icon: Download, label: 'Downloads' },
+  { to: ROUTES.LIBRARY, icon: FolderKanban, label: 'Biblioteca/KCC' },
   { to: ROUTES.CONNECTORS, icon: Plug, label: 'Conectores' },
 ];
 
@@ -44,7 +46,7 @@ export function AppLayout() {
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 px-6">
           <BookOpen className="h-7 w-7 text-[hsl(var(--primary))]" />
-          <span className="text-xl font-bold tracking-tight">MangaLivre</span>
+          <span className="text-xl font-bold tracking-tight">MangaKindle</span>
           <Button
             variant="ghost"
             size="icon"
@@ -97,7 +99,7 @@ export function AppLayout() {
           </Button>
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-[hsl(var(--primary))]" />
-            <span className="font-semibold">MangaLivre</span>
+            <span className="font-semibold">MangaKindle</span>
           </div>
         </header>
 

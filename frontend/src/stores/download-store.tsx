@@ -1,7 +1,7 @@
 import {
   createContext,
   useContext,
-  useRef,
+  useState,
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
@@ -260,7 +260,7 @@ function createDownloadStore(): DownloadStoreAPI {
     try {
       const result = await startDownload(request);
       // Remove the old failed entry
-      const { [id]: _, ...rest } = state.items;
+      const { [id]: _removed, ...rest } = state.items;
       setState({ items: rest });
       return result;
     } catch (err) {
@@ -307,13 +307,10 @@ function createDownloadStore(): DownloadStoreAPI {
 const DownloadStoreContext = createContext<DownloadStoreAPI | null>(null);
 
 export function DownloadProvider({ children }: { children: ReactNode }) {
-  const storeRef = useRef<DownloadStoreAPI | null>(null);
-  if (!storeRef.current) {
-    storeRef.current = createDownloadStore();
-  }
+  const [store] = useState<DownloadStoreAPI>(() => createDownloadStore());
 
   return (
-    <DownloadStoreContext.Provider value={storeRef.current}>
+    <DownloadStoreContext.Provider value={store}>
       {children}
     </DownloadStoreContext.Provider>
   );

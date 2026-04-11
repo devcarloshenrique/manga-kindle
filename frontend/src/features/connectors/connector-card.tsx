@@ -1,13 +1,24 @@
 import { Globe, ExternalLink } from 'lucide-react';
 import type { Connector } from '@/services/types';
-import { Card, CardContent, Badge, Select, Button } from '@/components/ui';
+import {
+  Card,
+  CardContent,
+  Badge,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Button,
+} from '@/components/ui';
 
 interface ConnectorCardProps {
   connector: Connector;
   onSetLanguage?: (name: string, language: string) => void;
+  disabled?: boolean;
 }
 
-export function ConnectorCard({ connector, onSetLanguage }: ConnectorCardProps) {
+export function ConnectorCard({ connector, onSetLanguage, disabled }: ConnectorCardProps) {
   return (
     <Card className="transition-all hover:shadow-md">
       <CardContent className="p-4">
@@ -38,12 +49,20 @@ export function ConnectorCard({ connector, onSetLanguage }: ConnectorCardProps) 
             <label className="mb-1 block text-sm font-medium">Idioma preferido</label>
             <Select
               value={connector.currentLanguage || ''}
-              onChange={(e) => onSetLanguage(connector.name, e.target.value)}
-              options={connector.supportedLanguages.map((lang) => ({
-                value: lang,
-                label: lang.toUpperCase(),
-              }))}
-            />
+              onValueChange={(value) => onSetLanguage(connector.name, value)}
+              disabled={disabled}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {connector.supportedLanguages.map((lang) => (
+                  <SelectItem key={lang} value={lang}>
+                    {lang.toUpperCase()}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
       </CardContent>

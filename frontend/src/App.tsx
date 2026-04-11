@@ -8,6 +8,7 @@ import {
   MangaPage,
   DownloadsPage,
   ConnectorsPage,
+  LibraryPage,
 } from '@/app/routes';
 
 export function App() {
@@ -20,6 +21,7 @@ export function App() {
           <Route path={ROUTES.MANGA} element={<MangaPage />} />
           <Route path={ROUTES.DOWNLOADS} element={<DownloadsPage />} />
           <Route path={ROUTES.CONNECTORS} element={<ConnectorsPage />} />
+          <Route path={ROUTES.LIBRARY} element={<LibraryPage />} />
         </Route>
       </Routes>
     </ErrorBoundary>

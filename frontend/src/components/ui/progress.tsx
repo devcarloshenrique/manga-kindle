@@ -8,7 +8,7 @@ interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
   ({ className, value = 0, max = 100, ...props }, ref) => {
-    const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+    const normalized = Math.min(max, Math.max(0, value));
 
     return (
       <div
@@ -16,13 +16,14 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={max}
-        aria-valuenow={value}
+        aria-valuenow={normalized}
         className={cn('relative h-3 w-full overflow-hidden rounded-full bg-[hsl(var(--secondary))]', className)}
         {...props}
       >
-        <div
-          className="h-full bg-[hsl(var(--primary))] transition-all duration-300 ease-in-out rounded-full"
-          style={{ width: `${percentage}%` }}
+        <progress
+          value={normalized}
+          max={max}
+          className="h-full w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-[hsl(var(--primary))] [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-300 [&::-moz-progress-bar]:bg-[hsl(var(--primary))]"
         />
       </div>
     );

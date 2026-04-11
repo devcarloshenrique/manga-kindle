@@ -6,6 +6,7 @@ export const ROUTES = {
   MANGA: '/manga',
   DOWNLOADS: '/downloads',
   CONNECTORS: '/connectors',
+  LIBRARY: '/library',
 } as const;
 
 export const IMAGE_FORMATS = ['original', 'webp', 'jpeg', 'jpg', 'png'] as const;
