@@ -13,6 +13,7 @@ export function ConnectorList() {
     setSettingLanguage(name);
     try {
       await connectorService.setLanguage(name, language);
+      await fetchConnectors();
       toast.success('Idioma atualizado', {
         description: `${name} configurado para ${language}`,
       });

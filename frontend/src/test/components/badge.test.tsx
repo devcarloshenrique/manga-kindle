@@ -13,7 +13,7 @@ describe('Badge', () => {
     render(<Badge variant="success">Success</Badge>);
     const badge = screen.getByText('Success');
     expect(badge).toBeInTheDocument();
-    expect(badge.className).toContain('emerald');
+    expect(badge.className).toContain('bg-success');
   });
 
   it('renders with destructive variant', () => {

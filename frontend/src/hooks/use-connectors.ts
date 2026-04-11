@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { connectorService } from '@/services';
 import type { Connector, ConnectorHealth } from '@/services/types';
 
@@ -48,6 +48,10 @@ export function useConnectors() {
     },
     [fetchConnectors],
   );
+
+  useEffect(() => {
+    fetchConnectors();
+  }, [fetchConnectors]);
 
   return {
     connectors,
