@@ -3,19 +3,19 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2',
+  'inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
   {
     variants: {
       variant: {
         default:
-          'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary))]/90 border border-transparent',
+          'bg-primary text-primary-foreground hover:bg-primary/90 border border-transparent',
         secondary:
-          'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] hover:bg-[hsl(var(--secondary))]/80 border border-transparent',
+          'bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-transparent',
         destructive:
-          'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:bg-[hsl(var(--destructive))]/90 border border-transparent',
-        outline: 'text-[hsl(var(--foreground))] border border-[hsl(var(--border))] bg-transparent',
-        success: 'bg-emerald-500 text-white border border-transparent hover:bg-emerald-600',
-        warning: 'bg-amber-500 text-white border border-transparent hover:bg-amber-600',
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90 border border-transparent',
+        outline: 'text-foreground border border-border bg-transparent',
+        success: 'bg-success text-success-foreground border border-transparent hover:bg-success/90',
+        warning: 'bg-warning text-warning-foreground border border-transparent hover:bg-warning/90',
         info: 'bg-sky-500 text-white border border-transparent hover:bg-sky-600',
       },
       size: {

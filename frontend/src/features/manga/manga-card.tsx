@@ -20,10 +20,10 @@ export function MangaCard({ manga }: MangaCardProps) {
   return (
     <Link
       to={`${ROUTES.MANGA}?url=${encodeURIComponent(manga.url)}`}
-      className="group relative overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] transition-all duration-300 hover:border-[hsl(var(--primary))]/50 hover:shadow-lg hover:shadow-[hsl(var(--primary))]/10 hover:scale-[1.02]"
+      className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02]"
     >
       {/* Cover Image */}
-      <div className="aspect-[3/4] w-full overflow-hidden bg-[hsl(var(--muted))]">
+      <div className="aspect-[3/4] w-full overflow-hidden bg-muted">
         {manga.coverUrl ? (
           <img
             src={manga.coverUrl}
@@ -32,8 +32,8 @@ export function MangaCard({ manga }: MangaCardProps) {
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <BookOpen className="h-16 w-16 text-[hsl(var(--muted-foreground))]" />
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10">
+            <BookOpen className="h-16 w-16 text-primary/40" />
           </div>
         )}
       </div>
@@ -68,7 +68,7 @@ export function MangaCard({ manga }: MangaCardProps) {
       </div>
 
       {/* Hover Effect Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary))]/0 to-[hsl(var(--accent))]/0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-accent/0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
     </Link>
   );
 }

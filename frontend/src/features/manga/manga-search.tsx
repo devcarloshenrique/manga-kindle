@@ -28,7 +28,7 @@ export function MangaSearch() {
 
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Buscar Mangá</h1>
-        <p className="text-[hsl(var(--muted-foreground))] mt-1">
+        <p className="text-muted-foreground mt-1">
           Cole a URL de um mangá de uma fonte suportada para ver suas informações e capítulos disponíveis.
         </p>
       </div>
@@ -36,7 +36,7 @@ export function MangaSearch() {
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
@@ -60,8 +60,8 @@ export function MangaSearch() {
       {loading && <LoadingSpinner className="py-12" text="Buscando informações do mangá..." />}
 
       {error && (
-        <div className="rounded-lg border border-[hsl(var(--destructive))]/30 bg-[hsl(var(--destructive))]/10 p-6">
-          <p className="text-sm font-medium text-[hsl(var(--destructive))]">{error}</p>
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-6">
+          <p className="text-sm font-medium text-destructive">{error}</p>
         </div>
       )}
 
@@ -74,16 +74,16 @@ export function MangaSearch() {
       {!loading && !error && !manga && (
         <div className="space-y-6">
           <EmptyState
-            icon={<Search className="h-16 w-16 text-[hsl(var(--muted-foreground))]" />}
+            icon={<Search className="h-16 w-16 text-muted-foreground" />}
             title="Busque um mangá"
             description="Cole a URL de um mangá de uma fonte suportada para ver suas informações e capítulos disponíveis."
           />
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <span className="text-sm text-[hsl(var(--muted-foreground))]">Fontes suportadas:</span>
-            <span className="inline-flex items-center rounded-full border border-[hsl(var(--border))] px-2.5 py-1 text-xs font-semibold">
+            <span className="text-sm text-muted-foreground">Fontes suportadas:</span>
+            <span className="inline-flex items-center rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
               MangaLivre
             </span>
-            <span className="inline-flex items-center rounded-full border border-[hsl(var(--border))] px-2.5 py-1 text-xs font-semibold">
+            <span className="inline-flex items-center rounded-full border border-border px-2.5 py-1 text-xs font-semibold">
               MangaDex
             </span>
           </div>

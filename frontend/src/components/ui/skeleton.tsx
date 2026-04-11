@@ -7,7 +7,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
-      className={cn('animate-pulse rounded-md bg-[hsl(var(--muted))]', className)}
+      className={cn('animate-pulse rounded-md bg-muted', className)}
       {...props}
     />
   );
@@ -15,7 +15,7 @@ export function Skeleton({ className, ...props }: SkeletonProps) {
 
 export function MangaCardSkeleton() {
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] overflow-hidden">
+    <div className="rounded-xl border border-border overflow-hidden">
       <div className="flex gap-4 p-4">
         <Skeleton className="h-48 w-32 flex-shrink-0 rounded-lg" />
         <div className="flex-1 space-y-3 py-1">
@@ -33,7 +33,7 @@ export function MangaCardSkeleton() {
 
 export function ChapterCardSkeleton() {
   return (
-    <div className="flex items-center justify-between rounded-lg border border-[hsl(var(--border))] p-4">
+    <div className="flex items-center justify-between rounded-lg border border-border p-4">
       <div className="flex items-center gap-3">
         <Skeleton className="h-4 w-8" />
         <Skeleton className="h-4 w-24" />

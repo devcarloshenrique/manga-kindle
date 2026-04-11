@@ -17,13 +17,13 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuenow={normalized}
-        className={cn('relative h-3 w-full overflow-hidden rounded-full bg-[hsl(var(--secondary))]', className)}
+        className={cn('relative h-3 w-full overflow-hidden rounded-full bg-secondary', className)}
         {...props}
       >
         <progress
           value={normalized}
           max={max}
-          className="h-full w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-[hsl(var(--primary))] [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-300 [&::-moz-progress-bar]:bg-[hsl(var(--primary))]"
+          className="h-full w-full overflow-hidden rounded-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:bg-primary [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-300 [&::-moz-progress-bar]:bg-primary"
         />
       </div>
     );

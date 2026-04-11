@@ -28,8 +28,8 @@ export function DashboardPage() {
       title: 'Downloads Ativos',
       value: activeDownloads.length,
       icon: Download,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
       href: ROUTES.DOWNLOADS,
     },
     {
@@ -44,19 +44,35 @@ export function DashboardPage() {
       title: 'Conectores',
       value: connectors.length,
       icon: Plug,
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/10',
+      color: 'text-accent',
+      bgColor: 'bg-accent/10',
       href: ROUTES.CONNECTORS,
     },
     {
       title: 'Uptime',
       value: stats ? `${Math.floor(stats.uptime / 60)}m` : '-',
       icon: Activity,
-      color: 'text-amber-500',
-      bgColor: 'bg-amber-500/10',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
       href: '#',
     },
   ];
+
+  const statusLabel: Record<string, string> = {
+    downloading: 'Baixando',
+    completed: 'Concluído',
+    failed: 'Falhou',
+    pending: 'Pendente',
+    cancelled: 'Cancelado',
+  };
+
+  const statusClass: Record<string, string> = {
+    downloading: 'bg-primary/10 text-primary',
+    completed: 'bg-success/10 text-success',
+    failed: 'bg-destructive/10 text-destructive',
+    pending: 'bg-warning/10 text-warning-foreground',
+    cancelled: 'bg-muted text-muted-foreground',
+  };
 
   return (
     <div className="space-y-6">
@@ -65,16 +81,17 @@ export function DashboardPage() {
         description="Visão geral do sistema e suas atividades"
       />
 
+      {/* Stat Cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card) => (
           <Link
             key={card.title}
             to={card.href}
-            className="group relative overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 transition-all hover:border-[hsl(var(--primary))]/50 hover:shadow-lg"
+            className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
+                <p className="text-sm font-medium text-muted-foreground">
                   {card.title}
                 </p>
                 <div className="mt-2 flex items-baseline gap-1">
@@ -90,20 +107,21 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Downloads Recentes */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-amber-500" />
+              <Zap className="h-5 w-5 text-warning" />
               Downloads Recentes
             </CardTitle>
           </CardHeader>
           <CardContent>
             {downloads.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[hsl(var(--muted-foreground))] text-sm">Nenhum download recente</p>
+                <p className="text-muted-foreground text-sm">Nenhum download recente</p>
                 <Link
                   to={ROUTES.SEARCH}
-                  className="mt-3 inline-flex items-center text-sm font-medium text-[hsl(var(--primary))] hover:underline"
+                  className="mt-3 inline-flex items-center text-sm font-medium text-primary hover:underline"
                 >
                   <Search className="h-4 w-4 mr-1" />
                   Buscar Mangá
@@ -114,27 +132,17 @@ export function DashboardPage() {
                 {downloads.slice(0, 5).map((download) => (
                   <div
                     key={download.id}
-                    className="flex items-center justify-between rounded-lg border border-[hsl(var(--border))] p-3"
+                    className="flex items-center justify-between rounded-lg border border-border p-3"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-medium truncate">{download.mangaTitle}</p>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                      <p className="text-xs text-muted-foreground">
                         {new Date(download.startedAt).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      download.status === 'downloading' ? 'bg-blue-500/10 text-blue-600' :
-                      download.status === 'completed' ? 'bg-emerald-500/10 text-emerald-600' :
-                      download.status === 'failed' ? 'bg-red-500/10 text-red-600' :
-                      download.status === 'pending' ? 'bg-amber-500/10 text-amber-600' :
-                      'bg-gray-500/10 text-gray-600'
-                    }`}>
-                      {download.status === 'downloading' ? 'Baixando' :
-                       download.status === 'completed' ? 'Concluído' :
-                       download.status === 'failed' ? 'Falhou' :
-                       download.status === 'pending' ? 'Pendente' :
-                       download.status}
-                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass[download.status] ?? 'bg-muted text-muted-foreground'}`}>
+                      {statusLabel[download.status] ?? download.status}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -142,17 +150,18 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Status dos Conectores */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Server className="h-5 w-5 text-emerald-500" />
+              <Server className="h-5 w-5 text-success" />
               Status dos Conectores
             </CardTitle>
           </CardHeader>
           <CardContent>
             {connectors.length === 0 ? (
               <div className="py-8 text-center">
-                <p className="text-[hsl(var(--muted-foreground))] text-sm">
+                <p className="text-muted-foreground text-sm">
                   Verificando conectores...
                 </p>
               </div>
@@ -161,24 +170,22 @@ export function DashboardPage() {
                 {connectors.map((connector) => (
                   <div
                     key={connector.name}
-                    className="flex items-center justify-between rounded-lg border border-[hsl(var(--border))] p-3"
+                    className="flex items-center justify-between rounded-lg border border-border p-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10">
-                        <Plug className="h-4 w-4 text-[hsl(var(--primary))]" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        <Plug className="h-4 w-4 text-primary" />
                       </div>
                       <div>
                         <p className="font-medium">{connector.displayName}</p>
-                        <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                        <p className="text-xs text-muted-foreground">
                           {connector.baseUrl}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                        Ativo
-                      </span>
+                      <span className="h-2 w-2 rounded-full bg-success" />
+                      <span className="text-xs text-muted-foreground">Ativo</span>
                     </div>
                   </div>
                 ))}
@@ -188,29 +195,28 @@ export function DashboardPage() {
         </Card>
       </div>
 
+      {/* System Stats */}
       {stats && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <HardDrive className="h-5 w-5 text-indigo-500" />
+              <HardDrive className="h-5 w-5 text-primary" />
               Estatísticas do Sistema
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 sm:grid-cols-3">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">Memória Usada</p>
+                <p className="text-sm font-medium text-muted-foreground">Memória Usada</p>
                 <p className="text-2xl font-bold">{stats.memory.used}</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                  RSS: {stats.memory.rss}
-                </p>
+                <p className="text-xs text-muted-foreground">RSS: {stats.memory.rss}</p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">Node.js</p>
+                <p className="text-sm font-medium text-muted-foreground">Node.js</p>
                 <p className="text-2xl font-bold">{stats.nodeVersion}</p>
               </div>
               <div className="space-y-2">
-                <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">Plataforma</p>
+                <p className="text-sm font-medium text-muted-foreground">Plataforma</p>
                 <p className="text-2xl font-bold">{stats.platform}</p>
               </div>
             </div>
