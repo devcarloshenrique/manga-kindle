@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Circle, Download, Loader2, Play, RefreshCw } from 'lucide-react';
-import { Badge, Button, Card, CardContent } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 
 export type ChapterVisualStatus = 'read' | 'unread' | 'downloaded' | 'downloading' | 'error';
 export type ChapterQuickFilter = 'all' | 'offline' | 'error';
@@ -118,60 +118,63 @@ export function ChapterListOptimized({
         ) : null}
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col overflow-hidden rounded-xl border border-border/50">
         {filteredChapters.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center text-sm text-[hsl(var(--muted-foreground))]">
-              Nenhum capítulo para o filtro selecionado.
-            </CardContent>
-          </Card>
+          <div className="bg-card py-10 text-center text-sm text-muted-foreground">
+            Nenhum capítulo para o filtro selecionado.
+          </div>
         ) : (
-          filteredChapters.map((chapter) => (
-            <Card key={chapter.id}>
-              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0 space-y-1">
-                  <p className="truncate font-medium">{chapter.chapterLabel}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {statusBadge(chapter.status)}
-                    {typeof chapter.pageCount === 'number' ? (
-                      <span className="text-xs text-[hsl(var(--muted-foreground))]">{chapter.pageCount} pág.</span>
-                    ) : null}
-                    {chapter.status === 'downloading' && typeof chapter.progressPercent === 'number' ? (
-                      <span className="text-xs text-[hsl(var(--muted-foreground))]">{chapter.progressPercent}%</span>
-                    ) : null}
-                  </div>
+          filteredChapters.map((chapter, index) => (
+            <div 
+              key={chapter.id} 
+              className={`flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between transition-colors hover:bg-muted/30 ${
+                index !== filteredChapters.length - 1 ? 'border-b border-border/50' : ''
+              } bg-card`}
+            >
+              <div className="min-w-0 space-y-1">
+                <p className="truncate font-medium">{chapter.chapterLabel}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {statusBadge(chapter.status)}
+                  {typeof chapter.pageCount === 'number' ? (
+                    <span className="text-xs text-muted-foreground">{chapter.pageCount} pág.</span>
+                  ) : null}
+                  {chapter.status === 'downloading' && typeof chapter.progressPercent === 'number' ? (
+                    <span className="text-xs text-muted-foreground">{chapter.progressPercent}%</span>
+                  ) : null}
                 </div>
+              </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={() => onRead(chapter.id)} disabled={disabled}>
-                    <Play className="h-4 w-4" />
-                    Ler
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" onClick={() => onRead(chapter.id)} disabled={disabled} className="rounded-full px-4">
+                  <Play className="mr-1 h-3.5 w-3.5" />
+                  Ler
+                </Button>
+
+                {chapter.status === 'error' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onRetry(chapter.id)}
+                    disabled={disabled}
+                    className="rounded-full px-4 text-destructive hover:bg-destructive/10"
+                  >
+                    <RefreshCw className="mr-1 h-3.5 w-3.5" />
+                    Tentar novamente
                   </Button>
-
-                  {chapter.status === 'error' ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onRetry(chapter.id)}
-                      disabled={disabled}
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                      Tentar novamente
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDownload(chapter.id)}
-                      disabled={disabled || chapter.status === 'downloading'}
-                    >
-                      <Download className="h-4 w-4" />
-                      {chapter.status === 'downloaded' ? 'Rebaixar' : 'Baixar'}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDownload(chapter.id)}
+                    disabled={disabled || chapter.status === 'downloading'}
+                    className={`rounded-full px-4 ${chapter.status === 'downloaded' ? 'bg-sky-500/10 text-sky-500 border-sky-500/20 hover:bg-sky-500/20' : ''}`}
+                  >
+                    <Download className="mr-1 h-3.5 w-3.5" />
+                    {chapter.status === 'downloaded' ? 'Rebaixar' : 'Baixar'}
+                  </Button>
+                )}
+              </div>
+            </div>
           ))
         )}
       </div>

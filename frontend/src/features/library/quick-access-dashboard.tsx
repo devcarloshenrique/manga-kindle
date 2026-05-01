@@ -1,5 +1,5 @@
 import { BookMarked, Download, PlayCircle } from 'lucide-react';
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
+import { Badge, Button } from '@/components/ui';
 
 export interface QuickAccessCurrentReading {
   mangaTitle: string;
@@ -34,89 +34,71 @@ export function QuickAccessDashboard({
   disabled,
 }: QuickAccessDashboardProps) {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <Card className="lg:col-span-2">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Acesso rápido</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {currentReading ? (
-            <>
-              <div className="space-y-1">
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">Leitura atual</p>
-                <p className="font-semibold">{currentReading.mangaTitle}</p>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                  {currentReading.chapterLabel}
-                  {typeof currentReading.progressPercent === 'number'
-                    ? ` • ${currentReading.progressPercent}% concluído`
-                    : ''}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {currentReading.offlineAvailable && (
-                  <Badge variant="info" size="sm">
-                    Offline disponível
-                  </Badge>
-                )}
-                <Badge variant="outline" size="sm">
-                  1 clique para retomar
+    <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-start">
+      <div className="flex-1 space-y-4">
+        {currentReading ? (
+          <div className="rounded-xl border border-border/50 bg-background/50 p-4 shadow-sm backdrop-blur-sm">
+            <div className="mb-2 flex items-center gap-2">
+              <p className="text-sm font-medium text-muted-foreground">Continuar leitura</p>
+              {currentReading.offlineAvailable && (
+                <Badge variant="outline" className="bg-sky-500/10 text-sky-500 border-sky-500/20 text-[10px] uppercase">
+                  Offline
                 </Badge>
+              )}
+            </div>
+            <p className="font-semibold">{currentReading.chapterLabel}</p>
+            {typeof currentReading.progressPercent === 'number' && (
+              <div className="mt-2 flex items-center gap-2">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
+                  <div className="h-full bg-primary" style={{ width: `${currentReading.progressPercent}%` }} />
+                </div>
+                <span className="text-xs text-muted-foreground">{currentReading.progressPercent}%</span>
               </div>
-            </>
-          ) : (
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">
-              Nenhuma leitura em andamento. Escolha um capítulo para começar.
-            </p>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={onContinueReading} disabled={disabled || !currentReading}>
-              <PlayCircle className="h-4 w-4" />
-              Continuar lendo
-            </Button>
-            <Button variant="outline" onClick={onDownloadNext} disabled={disabled || !currentReading}>
-              <Download className="h-4 w-4" />
-              Baixar próximo
-            </Button>
+            )}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button onClick={onContinueReading} disabled={disabled || !currentReading} className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
+                <PlayCircle className="mr-2 h-4 w-4" />
+                Ler Agora
+              </Button>
+              <Button variant="outline" onClick={onDownloadNext} disabled={disabled || !currentReading} className="bg-background/50">
+                <Download className="mr-2 h-4 w-4" />
+                Baixar Próximo
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <div className="rounded-xl border border-dashed border-border/50 bg-muted/20 p-6 text-center backdrop-blur-sm">
+            <p className="text-sm text-muted-foreground">Nenhuma leitura em andamento. Escolha um capítulo abaixo para começar.</p>
+          </div>
+        )}
+      </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Últimos baixados</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {recentDownloadedChapters.length === 0 ? (
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Nenhum capítulo baixado recentemente.</p>
-          ) : (
-            recentDownloadedChapters.slice(0, 5).map((chapter) => (
-              <Button
+      {recentDownloadedChapters.length > 0 && (
+        <div className="w-full shrink-0 md:w-64">
+          <p className="mb-2 text-sm font-medium text-muted-foreground">Últimos baixados</p>
+          <div className="space-y-2">
+            {recentDownloadedChapters.slice(0, 3).map((chapter) => (
+              <button
                 key={chapter.id}
-                variant="outline"
-                className="h-auto w-full justify-start p-3 text-left"
+                type="button"
+                className="flex w-full flex-col items-start gap-1 rounded-xl border border-border/50 bg-background/40 p-3 text-left transition-colors hover:bg-muted/80 backdrop-blur-sm"
                 onClick={() => onOpenRecentChapter(chapter.id)}
                 disabled={disabled}
               >
-                <div>
-                  <p className="font-medium leading-tight">{chapter.mangaTitle}</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">{chapter.chapterLabel}</p>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-[hsl(var(--muted-foreground))]">
-                    {chapter.offline ? (
-                      <span className="inline-flex items-center gap-1">
-                        <BookMarked className="h-3.5 w-3.5" />
-                        Offline
-                      </span>
-                    ) : null}
-                    {chapter.downloadedAtLabel ? <span>• {chapter.downloadedAtLabel}</span> : null}
-                  </div>
+                <p className="line-clamp-1 text-sm font-medium">{chapter.chapterLabel}</p>
+                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                  {chapter.offline && (
+                    <span className="flex items-center gap-1 text-sky-500">
+                      <BookMarked className="h-3 w-3" /> Offline
+                    </span>
+                  )}
+                  {chapter.downloadedAtLabel && <span>• {chapter.downloadedAtLabel}</span>}
                 </div>
-              </Button>
-            ))
-          )}
-        </CardContent>
-      </Card>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

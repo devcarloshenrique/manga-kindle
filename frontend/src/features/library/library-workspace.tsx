@@ -525,38 +525,31 @@ export function LibraryWorkspace() {
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base">Fluxo progressivo da Biblioteca/KCC</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-2 md:grid-cols-3">
-            {VIEW_OPTIONS.map((view) => {
-              const Icon = view.icon;
-              const selected = activeView === view.value;
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-center pb-2">
+        <div className="inline-flex items-center justify-center rounded-2xl bg-muted/40 p-1.5 shadow-inner ring-1 ring-inset ring-border/50 backdrop-blur-md">
+          {VIEW_OPTIONS.map((view) => {
+            const Icon = view.icon;
+            const selected = activeView === view.value;
 
-              return (
-                <Button
-                  key={view.value}
-                  type="button"
-                  variant={selected ? 'default' : 'outline'}
-                  className="h-auto justify-start p-4 text-left"
-                  onClick={() => setActiveView(view.value)}
-                >
-                  <div className="space-y-1">
-                    <p className="inline-flex items-center gap-2 font-semibold">
-                      <Icon className="h-4 w-4" />
-                      {view.label}
-                    </p>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">{view.description}</p>
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+            return (
+              <button
+                key={view.value}
+                type="button"
+                onClick={() => setActiveView(view.value)}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-xl px-6 py-2.5 text-sm font-medium transition-all duration-300 ${
+                  selected
+                    ? 'bg-background text-foreground shadow-sm ring-1 ring-border/50'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                }`}
+              >
+                <Icon className={`mr-2 h-4 w-4 ${selected ? 'text-primary' : ''}`} />
+                {view.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {activeJobs.length > 0 && (
         <Card className="border-primary/30 bg-primary/5">
@@ -644,32 +637,49 @@ export function LibraryWorkspace() {
                   ))}
                 </div>
               ) : (
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {mangas.map((manga) => (
-                    <Button
+                    <button
                       key={manga.slug}
                       type="button"
-                      variant="outline"
-                      className="h-auto justify-start rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 text-left transition hover:border-[hsl(var(--primary))]/60"
+                      className={`group relative overflow-hidden rounded-xl border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 ${
+                        selectedMangaSlug === manga.slug
+                          ? 'border-primary ring-2 ring-primary/50'
+                          : 'border-border/50 hover:border-primary/50'
+                      }`}
                       onClick={() => handleSelectManga(manga.slug)}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold">{manga.title}</p>
-                          <p className="text-sm text-[hsl(var(--muted-foreground))]">{manga.slug}</p>
+                      <div className="aspect-[2/3] w-full overflow-hidden bg-muted">
+                        {manga.coverUrl ? (
+                          <img
+                            src={manga.coverUrl}
+                            alt={manga.title}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-muted/50">
+                            <BookOpen className="h-12 w-12 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80" />
+                        
+                        <div className="absolute right-2 top-2 flex flex-col gap-1">
+                          <Badge variant={manga.hasConverted ? 'default' : 'secondary'} className="bg-background/80 text-[10px] backdrop-blur-md">
+                            {manga.hasConverted ? 'Convertido' : 'Sem conv.'}
+                          </Badge>
                         </div>
-                        <Badge variant={manga.hasConverted ? 'default' : 'outline'}>
-                          {manga.hasConverted ? 'Convertido' : 'Sem conversão'}
-                        </Badge>
+
+                        <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
+                          <p className="line-clamp-2 text-sm font-bold leading-tight text-white">{manga.title}</p>
+                          <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-1 text-[10px] font-medium text-white/80">
+                            <span className="flex items-center gap-1"><BookOpen className="h-3 w-3" />{manga.totalChapters} caps</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1"><HardDrive className="h-3 w-3" />{manga.totalSizeMB.toFixed(1)} MB</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-[hsl(var(--muted-foreground))]">
-                        <span>{manga.totalChapters} capítulos</span>
-                        <span>•</span>
-                        <span>{manga.totalPages} páginas</span>
-                        <span>•</span>
-                        <span>{manga.totalSizeMB.toFixed(1)} MB</span>
-                      </div>
-                    </Button>
+                    </button>
                   ))}
                 </div>
               )}
@@ -681,57 +691,75 @@ export function LibraryWorkspace() {
           </Card>
 
           {selectedManga && (
-            <div className="space-y-6">
-              <QuickAccessDashboard
-                currentReading={currentReading}
-                recentDownloadedChapters={recentDownloadedChapters}
-                onContinueReading={handleContinueReading}
-                onDownloadNext={handleDownloadNext}
-                onOpenRecentChapter={() => handleContinueReading()}
-                disabled={startingDownload}
-              />
+            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 fade-in">
+              {/* Hero Banner Integrado */}
+              <div className="relative overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm">
+                <div className="absolute inset-0 opacity-10 blur-xl">
+                  {selectedMangaOption?.coverUrl ? (
+                    <img src={selectedMangaOption.coverUrl} alt="Background cover" className="h-full w-full object-cover" />
+                  ) : null}
+                </div>
+                <div className="relative z-10 p-6 md:p-8">
+                  <div className="flex flex-col gap-6 md:flex-row md:items-start">
+                    {/* Cover Art */}
+                    <div className="w-32 shrink-0 md:w-48">
+                      <div className="aspect-[2/3] w-full overflow-hidden rounded-xl border-2 border-primary/20 shadow-xl">
+                        {selectedMangaOption?.coverUrl ? (
+                          <img src={selectedMangaOption.coverUrl} alt={selectedManga.info.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center bg-muted/50">
+                            <BookOpen className="h-12 w-12 text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Info */}
+                    <div className="flex flex-col flex-1 space-y-4">
+                      <div>
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="bg-background/50 backdrop-blur">{selectedManga.info.status ?? 'Desconhecido'}</Badge>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary">{selectedManga.info.language ?? '—'}</Badge>
+                        </div>
+                        <h2 className="text-2xl font-bold tracking-tight md:text-3xl lg:text-4xl">{selectedManga.info.title}</h2>
+                        <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <p>Tamanho: <span className="font-medium text-foreground">{formatBytes(selectedManga.totalSizeBytes)}</span></p>
+                          <p>Atualizado: <span className="font-medium text-foreground">{formatDate(selectedManga.updatedAt)}</span></p>
+                        </div>
+                      </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <BookOpen className="h-4 w-4" />
-                    {selectedManga.info.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <div>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Status</p>
-                      <p className="font-medium">{selectedManga.info.status ?? '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Idioma</p>
-                      <p className="font-medium">{selectedManga.info.language ?? '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Atualizado</p>
-                      <p className="font-medium">{formatDate(selectedManga.updatedAt)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Tamanho total</p>
-                      <p className="font-medium">{formatBytes(selectedManga.totalSizeBytes)}</p>
+                      <QuickAccessDashboard
+                        currentReading={currentReading}
+                        recentDownloadedChapters={recentDownloadedChapters}
+                        onContinueReading={handleContinueReading}
+                        onDownloadNext={handleDownloadNext}
+                        onOpenRecentChapter={() => handleContinueReading()}
+                        disabled={startingDownload}
+                      />
                     </div>
                   </div>
+                </div>
+              </div>
 
+              {/* Lista de Capítulos */}
+              <Card className="border-border/50 shadow-sm">
+                <CardContent className="p-0">
                   {resolvedMangaSlug && !isSelectedMangaLoaded ? (
-                    <div className="space-y-2">
+                    <div className="space-y-2 p-6">
                       {Array.from({ length: 4 }).map((_, index) => (
-                        <Skeleton key={`chapter-skeleton-${index}`} className="h-16 w-full" />
+                        <Skeleton key={`chapter-skeleton-${index}`} className="h-16 w-full rounded-xl" />
                       ))}
                     </div>
                   ) : (
-                    <ChapterListOptimized
-                      chapters={chapterListItems}
-                      onRead={() => handleContinueReading()}
-                      onDownload={queueChapterDownload}
-                      onRetry={queueChapterDownload}
-                      disabled={startingDownload}
-                    />
+                    <div className="p-6">
+                      <ChapterListOptimized
+                        chapters={chapterListItems}
+                        onRead={() => handleContinueReading()}
+                        onDownload={queueChapterDownload}
+                        onRetry={queueChapterDownload}
+                        disabled={startingDownload}
+                      />
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -975,30 +1003,46 @@ export function LibraryWorkspace() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="flex flex-col overflow-hidden border-primary/20 bg-gradient-to-b from-card to-card/50 shadow-lg">
+            <CardHeader className="bg-primary/5 pb-4">
               <CardTitle className="text-base">Resumo da conversão</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div>
-                <p className="text-[hsl(var(--muted-foreground))]">Mangá selecionado</p>
-                <p className="font-medium">{selectedMangaOption?.title ?? '—'}</p>
+            <CardContent className="flex-1 space-y-4 p-0">
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                {selectedMangaOption?.coverUrl ? (
+                  <img src={selectedMangaOption.coverUrl} alt="Cover" className="h-full w-full object-cover blur-sm opacity-50" />
+                ) : null}
+                <div className="absolute inset-0 flex items-center justify-center p-4">
+                  {selectedMangaOption?.coverUrl ? (
+                    <img src={selectedMangaOption.coverUrl} alt="Cover" className="h-full rounded-md shadow-2xl" />
+                  ) : (
+                    <BookOpen className="h-12 w-12 text-muted-foreground/30" />
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="text-[hsl(var(--muted-foreground))]">Perfil</p>
-                <p className="font-medium">{resolvedProfile || '—'}</p>
-              </div>
-              <div>
-                <p className="text-[hsl(var(--muted-foreground))]">Preset</p>
-                <p className="font-medium">{selectedPreset}</p>
-              </div>
-              <div>
-                <p className="text-[hsl(var(--muted-foreground))]">Formato</p>
-                <p className="font-medium">{format}</p>
-              </div>
-              <div>
-                <p className="text-[hsl(var(--muted-foreground))]">Jobs ativos</p>
-                <p className="font-medium">{activeJobs.length}</p>
+              <div className="space-y-3 px-6 pb-6 text-sm">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Mangá selecionado</p>
+                  <p className="font-semibold text-foreground">{selectedMangaOption?.title ?? '—'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Perfil</p>
+                    <p className="font-medium text-foreground">{resolvedProfile || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Preset</p>
+                    <p className="font-medium text-foreground">{selectedPreset}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Formato</p>
+                    <p className="font-medium text-foreground">{format}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Jobs ativos</p>
+                    <p className="font-medium text-foreground">{activeJobs.length}</p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
