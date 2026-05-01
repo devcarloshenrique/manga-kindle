@@ -1,16 +1,20 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  BarChart3,
   BookOpen,
   CheckCircle2,
   Clock3,
+  Compass,
   FolderSync,
   HardDrive,
   RefreshCw,
   Sparkles,
+  Workflow,
   Wand2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useKcc, useLibrary } from '@/hooks';
+import { useDownloads, useKcc, useLibrary } from '@/hooks';
 import { API_URL } from '@/lib/constants';
 import {
   Badge,
@@ -26,8 +30,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
+  Progress,
   Switch,
 } from '@/components/ui';
+import { QuickAccessDashboard } from './quick-access-dashboard';
+import { ChapterListOptimized, type ChapterListItem } from './chapter-list-optimized';
 
 const OUTPUT_FORMAT_OPTIONS = [
   { value: 'EPUB', label: 'EPUB' },
@@ -36,14 +44,43 @@ const OUTPUT_FORMAT_OPTIONS = [
   { value: 'KFX', label: 'KFX' },
 ];
 
-const TAB_OPTIONS = [
-  { value: 'library', label: 'Biblioteca' },
-  { value: 'conversion', label: 'Conversão KCC' },
-  { value: 'jobs', label: 'Jobs & Arquivos' },
+const VIEW_OPTIONS = [
+  {
+    value: 'explore',
+    label: 'Explorar e ler',
+    description: 'Biblioteca, seleção de mangá e leitura com 1 clique.',
+    icon: Compass,
+  },
+  {
+    value: 'conversion',
+    label: 'Conversão KCC',
+    description: 'Fluxo guiado em etapas para converter com menos atrito.',
+    icon: Workflow,
+  },
+  {
+    value: 'jobs',
+    label: 'Status e jobs',
+    description: 'Acompanhe fila, progresso e arquivos prontos.',
+    icon: BarChart3,
+  },
 ] as const;
 
-type WorkspaceTab = (typeof TAB_OPTIONS)[number]['value'];
+type WorkspaceView = (typeof VIEW_OPTIONS)[number]['value'];
 type ConversionMode = 'all' | 'range' | 'selected';
+
+const WORKSPACE_VIEW_QUERY_KEY = 'view';
+
+function parseWorkspaceView(raw: string | null): WorkspaceView {
+  if (raw === 'explore' || raw === 'conversion' || raw === 'jobs') {
+    return raw;
+  }
+
+  if (raw === 'library') {
+    return 'explore';
+  }
+
+  return 'explore';
+}
 
 function formatDate(value?: string) {
   if (!value) return '—';
@@ -64,14 +101,15 @@ function formatBytes(bytes?: number) {
 
 function statusBadgeVariant(status?: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   if (!status) return 'outline';
-  if (status === 'completed' || status === 'completed') return 'default';
+  if (status === 'completed') return 'default';
   if (status === 'failed' || status === 'cancelled') return 'destructive';
   if (status === 'processing' || status === 'queued') return 'secondary';
   return 'outline';
 }
 
 export function LibraryWorkspace() {
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('library');
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const {
     stats,
@@ -93,12 +131,18 @@ export function LibraryWorkspace() {
     submitting,
     error: kccError,
     convertManga,
-  convertChapters,
+    convertChapters,
     fetchInitialData,
     refreshJobs,
     organizeDownloads,
     organizeConverted,
   } = useKcc();
+
+  const {
+    activeDownloads,
+    startDownload,
+    startingDownload,
+  } = useDownloads();
 
   const [search, setSearch] = useState('');
   const [format, setFormat] = useState<'EPUB' | 'MOBI' | 'CBZ' | 'KFX'>('EPUB');
@@ -115,6 +159,16 @@ export function LibraryWorkspace() {
   const [rangeStartChapter, setRangeStartChapter] = useState('');
   const [rangeEndChapter, setRangeEndChapter] = useState('');
   const [selectedChapterNames, setSelectedChapterNames] = useState<string[]>([]);
+
+  const activeView = parseWorkspaceView(searchParams.get(WORKSPACE_VIEW_QUERY_KEY));
+
+  const setActiveView = (view: WorkspaceView) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set(WORKSPACE_VIEW_QUERY_KEY, view);
+      return next;
+    }, { replace: true });
+  };
 
   const resolvedMangaSlug = selectedMangaSlug || mangas[0]?.slug || '';
   const resolvedProfile = selectedProfile || profiles[0]?.id || '';
@@ -232,6 +286,8 @@ export function LibraryWorkspace() {
       toast.success('Conversão enviada para fila', {
         description: result.message,
       });
+      setActiveView('jobs');
+      refreshJobs();
       return;
     }
 
@@ -278,6 +334,8 @@ export function LibraryWorkspace() {
     toast.success('Conversão enviada para fila', {
       description: result.message,
     });
+    setActiveView('jobs');
+    refreshJobs();
   };
 
   const handleOrganizeDownloads = async () => {
@@ -295,26 +353,229 @@ export function LibraryWorkspace() {
     }
   };
 
+  const activeDownloadForSelectedManga = useMemo(
+    () => activeDownloads.find((download) => download.data.mangaTitle === selectedManga?.info.title),
+    [activeDownloads, selectedManga?.info.title],
+  );
+
+  const chapterListItems = useMemo<ChapterListItem[]>(() => {
+    const chapters = selectedManga?.chapters ?? [];
+
+    return chapters.map((chapter) => {
+      const isCurrentDownloading = activeDownloadForSelectedManga?.data.progress.currentChapter === chapter.name;
+      const hasError = (activeDownloadForSelectedManga?.data.errors ?? []).some(
+        (error) => error.chapter === chapter.name,
+      );
+
+      const status = hasError
+        ? 'error'
+        : isCurrentDownloading
+          ? 'downloading'
+          : chapter.converted
+            ? 'read'
+            : chapter.pageCount > 0
+              ? 'downloaded'
+              : 'unread';
+
+      return {
+        id: chapter.name,
+        chapterLabel: chapter.name,
+        pageCount: chapter.pageCount,
+        status,
+        progressPercent: isCurrentDownloading
+          ? activeDownloadForSelectedManga?.data.progress.percentage
+          : undefined,
+      };
+    });
+  }, [activeDownloadForSelectedManga, selectedManga?.chapters]);
+
+  const activeJobs = useMemo(
+    () => jobs.filter((job) => job.status === 'queued' || job.status === 'processing'),
+    [jobs],
+  );
+
+  const activeJobsProgress = useMemo(() => {
+    if (activeJobs.length === 0) return 0;
+
+    const total = activeJobs.reduce((sum, job) => sum + (Number.isFinite(job.progress) ? job.progress : 0), 0);
+    return Math.round(total / activeJobs.length);
+  }, [activeJobs]);
+
+  const conversionStepOneDone = Boolean(resolvedMangaSlug && resolvedProfile);
+  const conversionStepTwoDone =
+    conversionMode === 'selected'
+      ? selectedChapterPaths.length > 0
+      : conversionMode === 'range'
+        ? Boolean(effectiveRangeStartChapter && effectiveRangeEndChapter)
+        : true;
+  const conversionStepThreeReady = conversionStepOneDone && conversionStepTwoDone;
+  const conversionStepperValue = conversionStepThreeReady
+    ? 100
+    : conversionStepOneDone
+      ? 66
+      : 33;
+
+  useEffect(() => {
+    if (activeJobs.length > 0) {
+      toast.loading('Conversões em segundo plano', {
+        id: 'kcc-background-jobs',
+        description: `${activeJobs.length} job(s) ativo(s) • ${activeJobsProgress}%`,
+      });
+      return;
+    }
+
+    toast.dismiss('kcc-background-jobs');
+  }, [activeJobs.length, activeJobsProgress]);
+
+  const recentDownloadedChapters = useMemo(() => {
+    if (!selectedManga) return [];
+
+    return [...selectedManga.chapters]
+      .filter((chapter) => chapter.pageCount > 0)
+      .sort((a, b) =>
+        new Date(b.downloadedAt ?? 0).getTime() - new Date(a.downloadedAt ?? 0).getTime(),
+      )
+      .slice(0, 5)
+      .map((chapter) => ({
+        id: chapter.name,
+        mangaTitle: selectedManga.info.title,
+        chapterLabel: chapter.name,
+        downloadedAtLabel: formatDate(chapter.downloadedAt),
+        offline: true,
+      }));
+  }, [selectedManga]);
+
+  const currentReading = useMemo(() => {
+    if (!selectedManga) return null;
+
+    const currentChapter = selectedManga.chapters.find((chapter) => chapter.converted)
+      ?? selectedManga.chapters[0];
+
+    if (!currentChapter) return null;
+
+    const hasOffline = selectedManga.chapters.some((chapter) => chapter.pageCount > 0);
+
+    return {
+      mangaTitle: selectedManga.info.title,
+      chapterLabel: currentChapter.name,
+      progressPercent: activeDownloadForSelectedManga?.data.progress.percentage,
+      offlineAvailable: hasOffline,
+    };
+  }, [activeDownloadForSelectedManga?.data.progress.percentage, selectedManga]);
+
+  const getChapterOrdinal = (chapterName: string) => {
+    const chapterIndex = (selectedManga?.chapters ?? []).findIndex((chapter) => chapter.name === chapterName);
+    if (chapterIndex < 0) return 1;
+
+    const chapter = selectedManga?.chapters[chapterIndex];
+    const extracted = chapter?.name.match(/\d+/)?.[0];
+    const numericFromName = extracted ? Number.parseInt(extracted, 10) : NaN;
+
+    if (Number.isFinite(numericFromName) && numericFromName > 0) {
+      return numericFromName;
+    }
+
+    return chapterIndex + 1;
+  };
+
+  const handleContinueReading = () => {
+    if (!selectedManga?.info.url) {
+      toast.error('Nenhum mangá selecionado para continuar leitura');
+      return;
+    }
+
+    navigate(`/manga?url=${encodeURIComponent(selectedManga.info.url)}`);
+  };
+
+  const queueChapterDownload = async (chapterId: string) => {
+    if (!selectedManga?.info.url) {
+      toast.error('Selecione um mangá para baixar capítulos');
+      return;
+    }
+
+    const chapterNumber = getChapterOrdinal(chapterId);
+
+    const result = await startDownload({
+      url: selectedManga.info.url,
+      startChapter: chapterNumber,
+      endChapter: chapterNumber,
+      imageFormat: 'original',
+    });
+
+    if (!result) {
+      toast.error('Falha ao enviar capítulo para download');
+      return;
+    }
+
+    toast.success('Download de capítulo enviado', {
+      description: `Capítulo ${chapterId}`,
+    });
+  };
+
+  const handleDownloadNext = async () => {
+    const nextChapter = chapterListItems.find((chapter) => chapter.status === 'unread')
+      ?? chapterListItems.find((chapter) => chapter.status === 'downloaded');
+
+    if (!nextChapter) {
+      toast.info('Nenhum próximo capítulo disponível para download');
+      return;
+    }
+
+    await queueChapterDownload(nextChapter.id);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-base">Navegação</CardTitle>
+          <CardTitle className="text-base">Fluxo progressivo da Biblioteca/KCC</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {TAB_OPTIONS.map((tab) => (
-              <Button
-                key={tab.value}
-                variant={activeTab === tab.value ? 'default' : 'outline'}
-                onClick={() => setActiveTab(tab.value)}
-              >
-                {tab.label}
-              </Button>
-            ))}
+          <div className="grid gap-2 md:grid-cols-3">
+            {VIEW_OPTIONS.map((view) => {
+              const Icon = view.icon;
+              const selected = activeView === view.value;
+
+              return (
+                <Button
+                  key={view.value}
+                  type="button"
+                  variant={selected ? 'default' : 'outline'}
+                  className="h-auto justify-start p-4 text-left"
+                  onClick={() => setActiveView(view.value)}
+                >
+                  <div className="space-y-1">
+                    <p className="inline-flex items-center gap-2 font-semibold">
+                      <Icon className="h-4 w-4" />
+                      {view.label}
+                    </p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">{view.description}</p>
+                  </div>
+                </Button>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
+
+      {activeJobs.length > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="space-y-2 pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">Conversões em andamento no background</p>
+              <Badge variant="outline" className="border-primary/30 bg-background">
+                {activeJobs.length} job(s) ativo(s)
+              </Badge>
+            </div>
+            <Progress value={activeJobsProgress} />
+            <div className="flex justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setActiveView('jobs')}>
+                Ver detalhes dos jobs
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {(libraryError || kccError) && (
         <Card className="border-[hsl(var(--destructive))]/40">
@@ -324,7 +585,7 @@ export function LibraryWorkspace() {
         </Card>
       )}
 
-      {activeTab === 'library' && (
+      {activeView === 'explore' && (
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-4">
             <Card>
@@ -355,7 +616,7 @@ export function LibraryWorkspace() {
 
           <Card>
             <CardHeader className="pb-4">
-              <CardTitle className="text-base">Busca e lista da biblioteca</CardTitle>
+              <CardTitle className="text-base">Explorar biblioteca</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-3 md:flex-row">
@@ -370,34 +631,48 @@ export function LibraryWorkspace() {
                 </Button>
               </div>
 
-              <div className="grid gap-3 lg:grid-cols-2">
-                {mangas.map((manga) => (
-                  <Button
-                    key={manga.slug}
-                    type="button"
-                    variant="outline"
-                    className="h-auto justify-start rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 text-left transition hover:border-[hsl(var(--primary))]/60"
-                    onClick={() => handleSelectManga(manga.slug)}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">{manga.title}</p>
-                        <p className="text-sm text-[hsl(var(--muted-foreground))]">{manga.slug}</p>
+              {libraryLoading && mangas.length === 0 ? (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Card key={`manga-skeleton-${index}`}>
+                      <CardContent className="space-y-3 p-4">
+                        <Skeleton className="h-5 w-2/3" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {mangas.map((manga) => (
+                    <Button
+                      key={manga.slug}
+                      type="button"
+                      variant="outline"
+                      className="h-auto justify-start rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 text-left transition hover:border-[hsl(var(--primary))]/60"
+                      onClick={() => handleSelectManga(manga.slug)}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold">{manga.title}</p>
+                          <p className="text-sm text-[hsl(var(--muted-foreground))]">{manga.slug}</p>
+                        </div>
+                        <Badge variant={manga.hasConverted ? 'default' : 'outline'}>
+                          {manga.hasConverted ? 'Convertido' : 'Sem conversão'}
+                        </Badge>
                       </div>
-                      <Badge variant={manga.hasConverted ? 'default' : 'outline'}>
-                        {manga.hasConverted ? 'Convertido' : 'Sem conversão'}
-                      </Badge>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-[hsl(var(--muted-foreground))]">
-                      <span>{manga.totalChapters} capítulos</span>
-                      <span>•</span>
-                      <span>{manga.totalPages} páginas</span>
-                      <span>•</span>
-                      <span>{manga.totalSizeMB.toFixed(1)} MB</span>
-                    </div>
-                  </Button>
-                ))}
-              </div>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs text-[hsl(var(--muted-foreground))]">
+                        <span>{manga.totalChapters} capítulos</span>
+                        <span>•</span>
+                        <span>{manga.totalPages} páginas</span>
+                        <span>•</span>
+                        <span>{manga.totalSizeMB.toFixed(1)} MB</span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              )}
 
               <p className="text-sm text-[hsl(var(--muted-foreground))]">
                 Página {paginationInfo.page} de {paginationInfo.totalPages} • Total: {paginationInfo.total}
@@ -406,75 +681,81 @@ export function LibraryWorkspace() {
           </Card>
 
           {selectedManga && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <BookOpen className="h-4 w-4" />
-                  {selectedManga.info.title}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <div>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Status</p>
-                    <p className="font-medium">{selectedManga.info.status ?? '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Idioma</p>
-                    <p className="font-medium">{selectedManga.info.language ?? '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Atualizado</p>
-                    <p className="font-medium">{formatDate(selectedManga.updatedAt)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">Tamanho total</p>
-                    <p className="font-medium">{formatBytes(selectedManga.totalSizeBytes)}</p>
-                  </div>
-                </div>
+            <div className="space-y-6">
+              <QuickAccessDashboard
+                currentReading={currentReading}
+                recentDownloadedChapters={recentDownloadedChapters}
+                onContinueReading={handleContinueReading}
+                onDownloadNext={handleDownloadNext}
+                onOpenRecentChapter={() => handleContinueReading()}
+                disabled={startingDownload}
+              />
 
-                <div className="max-h-80 overflow-auto rounded-lg border border-[hsl(var(--border))]">
-                  <table className="w-full text-sm">
-                    <thead className="bg-[hsl(var(--muted))] text-left">
-                      <tr>
-                        <th className="px-3 py-2 font-medium">Capítulo</th>
-                        <th className="px-3 py-2 font-medium">Páginas</th>
-                        <th className="px-3 py-2 font-medium">Tamanho</th>
-                        <th className="px-3 py-2 font-medium">Conversão</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedManga.chapters.slice(0, 50).map((chapter) => (
-                        <tr key={chapter.name} className="border-t border-[hsl(var(--border))]">
-                          <td className="px-3 py-2">{chapter.name}</td>
-                          <td className="px-3 py-2">{chapter.pageCount}</td>
-                          <td className="px-3 py-2">{formatBytes(chapter.sizeBytes)}</td>
-                          <td className="px-3 py-2">
-                            {chapter.converted ? (
-                              <Badge variant="default">{chapter.convertedFile ?? 'OK'}</Badge>
-                            ) : (
-                              <Badge variant="outline">Pendente</Badge>
-                            )}
-                          </td>
-                        </tr>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <BookOpen className="h-4 w-4" />
+                    {selectedManga.info.title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Status</p>
+                      <p className="font-medium">{selectedManga.info.status ?? '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Idioma</p>
+                      <p className="font-medium">{selectedManga.info.language ?? '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Atualizado</p>
+                      <p className="font-medium">{formatDate(selectedManga.updatedAt)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Tamanho total</p>
+                      <p className="font-medium">{formatBytes(selectedManga.totalSizeBytes)}</p>
+                    </div>
+                  </div>
+
+                  {resolvedMangaSlug && !isSelectedMangaLoaded ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <Skeleton key={`chapter-skeleton-${index}`} className="h-16 w-full" />
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
+                    </div>
+                  ) : (
+                    <ChapterListOptimized
+                      chapters={chapterListItems}
+                      onRead={() => handleContinueReading()}
+                      onDownload={queueChapterDownload}
+                      onRetry={queueChapterDownload}
+                      disabled={startingDownload}
+                    />
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       )}
 
-      {activeTab === 'conversion' && (
+      {activeView === 'conversion' && (
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-2">
-            <CardHeader>
+            <CardHeader className="space-y-3">
               <CardTitle className="flex items-center gap-2 text-base">
                 <Wand2 className="h-4 w-4" />
-                Converter mangá baixado (KCC)
+                Conversão KCC por etapas
               </CardTitle>
+              <div className="space-y-2">
+                <Progress value={conversionStepperValue} />
+                <div className="grid gap-2 text-xs text-[hsl(var(--muted-foreground))] sm:grid-cols-3">
+                  <p className={conversionStepOneDone ? 'text-[hsl(var(--foreground))]' : ''}>1. Fonte e dispositivo</p>
+                  <p className={conversionStepTwoDone ? 'text-[hsl(var(--foreground))]' : ''}>2. Escopo de capítulos</p>
+                  <p className={conversionStepThreeReady ? 'text-[hsl(var(--foreground))]' : ''}>3. Revisar e enviar</p>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2">
@@ -540,7 +821,7 @@ export function LibraryWorkspace() {
                 </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm font-medium">Modo de conversão</label>
                   <Select value={conversionMode} onValueChange={(value) => setConversionMode(value as ConversionMode)}>
@@ -554,14 +835,6 @@ export function LibraryWorkspace() {
                     </SelectContent>
                   </Select>
                 </div>
-                <label className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
-                  Agrupar em volumes
-                  <Switch checked={mergeIntoVolumes} onCheckedChange={setMergeIntoVolumes} />
-                </label>
-                <label className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
-                  Volume único
-                  <Switch checked={singleVolume} onCheckedChange={setSingleVolume} />
-                </label>
                 <div>
                   <label className="mb-1 block text-sm font-medium">Capítulos por volume</label>
                   <Input
@@ -646,23 +919,31 @@ export function LibraryWorkspace() {
                 </div>
               )}
 
-              <div>
-                <p className="mb-2 text-sm font-medium">Opções rápidas (equivalente KCC GUI)</p>
-                <div className="grid gap-2 md:grid-cols-3">
-                  <label className="flex items-center gap-2 rounded-md border p-2 text-sm">
-                    <Switch checked={mangaStyle} onCheckedChange={setMangaStyle} />
+              <details className="rounded-lg border border-[hsl(var(--border))] p-3">
+                <summary className="cursor-pointer text-sm font-medium">Opções avançadas (KCC)</summary>
+                <div className="mt-3 grid gap-2 md:grid-cols-3">
+                  <label className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
+                    Agrupar em volumes
+                    <Switch checked={mergeIntoVolumes} onCheckedChange={setMergeIntoVolumes} />
+                  </label>
+                  <label className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
+                    Volume único
+                    <Switch checked={singleVolume} onCheckedChange={setSingleVolume} />
+                  </label>
+                  <label className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
                     Manga mode
+                    <Switch checked={mangaStyle} onCheckedChange={setMangaStyle} />
                   </label>
-                  <label className="flex items-center gap-2 rounded-md border p-2 text-sm">
-                    <Switch checked={hq} onCheckedChange={setHq} />
+                  <label className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm">
                     High quality
+                    <Switch checked={hq} onCheckedChange={setHq} />
                   </label>
-                  <label className="flex items-center gap-2 rounded-md border p-2 text-sm">
-                    <Switch checked={webtoon} onCheckedChange={setWebtoon} />
+                  <label className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm md:col-span-2">
                     Webtoon mode
+                    <Switch checked={webtoon} onCheckedChange={setWebtoon} />
                   </label>
                 </div>
-              </div>
+              </details>
 
               <div className="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--muted))/0.3] p-3 text-xs text-[hsl(var(--muted-foreground))]">
                 <p>
@@ -717,14 +998,14 @@ export function LibraryWorkspace() {
               </div>
               <div>
                 <p className="text-[hsl(var(--muted-foreground))]">Jobs ativos</p>
-                <p className="font-medium">{jobs.filter((j) => j.status === 'queued' || j.status === 'processing').length}</p>
+                <p className="font-medium">{activeJobs.length}</p>
               </div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {activeTab === 'jobs' && (
+      {activeView === 'jobs' && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -736,17 +1017,22 @@ export function LibraryWorkspace() {
             </CardHeader>
             <CardContent className="space-y-3">
               {kccLoading && jobs.length === 0 ? (
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">Carregando jobs...</p>
+                <div className="space-y-2">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={`job-skeleton-${index}`} className="h-20 w-full" />
+                  ))}
+                </div>
               ) : jobs.length === 0 ? (
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Nenhum job encontrado.</p>
               ) : (
                 jobs.map((job) => (
-                  <div key={job.id} className="rounded-lg border p-3">
+                  <div key={job.id} className="space-y-2 rounded-lg border p-3">
                     <div className="flex items-center justify-between gap-2">
                       <p className="font-medium">{job.id}</p>
                       <Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge>
                     </div>
-                    <div className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">
+                    <Progress value={job.progress} className="h-2" />
+                    <div className="text-xs text-[hsl(var(--muted-foreground))]">
                       <p>Formato: {job.outputFormat} • Perfil: {job.profile}</p>
                       <p>Progresso: {job.progress}% • Criado em: {formatDate(job.createdAt)}</p>
                     </div>

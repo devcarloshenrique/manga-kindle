@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Download, Plug, Activity, Search, Zap, Server, HardDrive } from 'lucide-react';
 import { PageHeader } from '@/components/shared';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui';
 import { useDownloads, useConnectors, useSystemStats } from '@/hooks';
 import { ROUTES } from '@/lib/constants';
 
@@ -79,7 +79,20 @@ export function DashboardPage() {
       <PageHeader
         title="Dashboard"
         description="Visão geral do sistema e suas atividades"
-      />
+      >
+        <Button asChild variant="outline" size="sm">
+          <Link to={ROUTES.SEARCH}>
+            <Search className="h-4 w-4" />
+            Buscar mangá
+          </Link>
+        </Button>
+        <Button asChild size="sm">
+          <Link to={ROUTES.LIBRARY}>
+            <BookOpen className="h-4 w-4" />
+            Continuar na biblioteca
+          </Link>
+        </Button>
+      </PageHeader>
 
       {/* Stat Cards */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
