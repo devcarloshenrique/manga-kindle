@@ -26,12 +26,7 @@ export function MangaSearch() {
     <div className="space-y-6">
       <Breadcrumb items={breadcrumbItems} />
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Buscar Mangá</h1>
-        <p className="text-muted-foreground mt-1">
-          Cole a URL de um mangá de uma fonte suportada para ver suas informações e capítulos disponíveis.
-        </p>
-      </div>
+
 
       <form onSubmit={handleSubmit} className="relative">
         <div className="flex gap-3">

@@ -8,7 +8,7 @@ import { ROUTES } from '@/lib/constants';
 export function SearchPage() {
   return (
     <div className="space-y-6">
-      <PageHeader title="Buscar Manga" description="Cole a URL de um manga para buscar suas informacoes">
+      <PageHeader title="Buscar Mangá" description="Cole a URL de um mangá de uma fonte suportada para ver suas informações e capítulos disponíveis.">
         <Button asChild variant="outline" size="sm">
           <Link to={ROUTES.DOWNLOADS}>
             <Download className="h-4 w-4" />
