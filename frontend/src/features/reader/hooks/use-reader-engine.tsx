@@ -30,6 +30,8 @@ interface ReaderEngine {
   setFit: (fit: 'width' | 'height' | 'contain') => void;
   setBrightness: (brightness: number) => void;
   toggleControls: () => void;
+  pauseAutoHide: () => void;
+  resumeAutoHide: () => void;
 }
 
 export function useReaderEngine(opts: ReaderEngineOptions): ReaderEngine {
@@ -45,26 +47,43 @@ export function useReaderEngine(opts: ReaderEngineOptions): ReaderEngine {
   const [brightness, setBrightness] = useState(1);
 
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoHidePausedRef = useRef(false);
 
   const currentPage = page;
   const isFirstPage = page === 0;
   const isLastPage = page >= totalPages - 1;
 
+  const clearHideTimer = useCallback(() => {
+    if (hideTimerRef.current) {
+      clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = null;
+    }
+  }, []);
+
   const scheduleHide = useCallback(() => {
-    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    clearHideTimer();
+    if (autoHidePausedRef.current) return;
     hideTimerRef.current = setTimeout(() => {
       setShowControls(false);
     }, autoHideMs);
-  }, [autoHideMs]);
+  }, [autoHideMs, clearHideTimer]);
 
   useEffect(() => {
     if (showControls) {
       scheduleHide();
     }
-    return () => {
-      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-    };
-  }, [showControls, scheduleHide, page]);
+    return clearHideTimer;
+  }, [showControls, scheduleHide, page, clearHideTimer]);
+
+  const pauseAutoHide = useCallback(() => {
+    autoHidePausedRef.current = true;
+    clearHideTimer();
+  }, [clearHideTimer]);
+
+  const resumeAutoHide = useCallback(() => {
+    autoHidePausedRef.current = false;
+    if (showControls) scheduleHide();
+  }, [showControls, scheduleHide]);
 
   const next = useCallback(() => {
     setPage((p) => Math.min(p + 1, totalPages - 1));
@@ -149,5 +168,7 @@ export function useReaderEngine(opts: ReaderEngineOptions): ReaderEngine {
     setFit,
     setBrightness,
     toggleControls,
+    pauseAutoHide,
+    resumeAutoHide,
   };
 }
