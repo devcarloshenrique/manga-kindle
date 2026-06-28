@@ -5,7 +5,6 @@ import { Button } from '@/components/ui';
 import { ReaderShell } from '@/features/reader';
 import { useReader } from '@/hooks/use-reader';
 import { useReaderProgress } from '@/hooks/use-reader-progress';
-import type { LibraryMangaDetails } from '@/services';
 
 export function ReaderPage() {
   const { slug, chapter } = useParams<{ slug: string; chapter: string }>();
@@ -97,8 +96,6 @@ export function ReaderPage() {
     <div className="h-screen w-full overflow-hidden bg-background">
       <ReaderShell
         pageUrls={pageUrls}
-        chapterName={decodedChapter ?? ''}
-        mangaTitle={manga.info.title}
         onPageChange={setCurrentPageIndex}
         onClose={() => navigate(-1)}
         onPrevChapter={handlePrevChapter}

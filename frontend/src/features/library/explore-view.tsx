@@ -5,8 +5,6 @@ import {
   CheckCircle2,
   Compass,
   HardDrive,
-  Loader2,
-  Play,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -18,7 +16,6 @@ import {
   CardHeader,
   CardTitle,
   Input,
-  Progress,
   Skeleton,
 } from '@/components/ui';
 import { useDownloads, useLibrary } from '@/hooks';
@@ -58,7 +55,6 @@ export function ExploreView({ activeDownloads }: ExploreViewProps) {
     error: libraryError,
     fetchMangas,
     fetchMangaDetails,
-    setSelectedManga,
   } = useLibrary({ page: 1, limit: 20, sortBy: 'updatedAt', order: 'desc' });
   const { startDownload, startingDownload } = useDownloads();
 
@@ -67,7 +63,6 @@ export function ExploreView({ activeDownloads }: ExploreViewProps) {
 
   const resolvedMangaSlug = selectedMangaSlug || mangas[0]?.slug || '';
   const isSelectedMangaLoaded = selectedManga?.slug === resolvedMangaSlug;
-  const resolvedMangaDetails = isSelectedMangaLoaded ? selectedManga : null;
 
   useEffect(() => {
     if (resolvedMangaSlug && !isSelectedMangaLoaded) {

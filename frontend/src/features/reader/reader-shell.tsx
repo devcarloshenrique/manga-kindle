@@ -13,8 +13,6 @@ interface ReaderShellProps {
   initialPage?: number;
   initialMode?: 'single' | 'double' | 'webtoon';
   initialDirection?: 'ltr' | 'rtl';
-  chapterName: string;
-  mangaTitle: string;
   onPageChange?: (page: number) => void;
   onClose: () => void;
   onNextChapter?: () => void;
@@ -28,8 +26,6 @@ export function ReaderShell({
   initialPage = 0,
   initialMode = 'single',
   initialDirection = 'ltr',
-  chapterName,
-  mangaTitle,
   onPageChange,
   onClose,
   onNextChapter,
@@ -38,8 +34,6 @@ export function ReaderShell({
   hasPrevChapter,
 }: ReaderShellProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [loadedPages, setLoadedPages] = useState<Set<number>>(new Set());
-  const [loadErrors, setLoadErrors] = useState<Set<number>>(new Set());
 
   const engine = useReaderEngine({
     totalPages: pageUrls.length,
@@ -86,25 +80,6 @@ export function ReaderShell({
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
-  const handleImageLoad = useCallback(
-    (idx: number) => {
-      setLoadedPages((prev) => {
-        const next = new Set(prev);
-        next.add(idx);
-        return next;
-      });
-    },
-    [],
-  );
-
-  const handleImageError = useCallback((idx: number) => {
-    setLoadErrors((prev) => {
-      const next = new Set(prev);
-      next.add(idx);
-      return next;
-    });
-  }, []);
-
   const pages = useMemo(
     () =>
       pageUrls.map((src, index) => ({
@@ -142,7 +117,6 @@ export function ReaderShell({
           pages={pages}
           currentPage={engine.currentPage}
           totalPages={pageUrls.length}
-          fit={engine.fit}
           zoom={engine.zoom}
           brightness={engine.brightness}
           direction={engine.direction}
@@ -165,7 +139,7 @@ export function ReaderShell({
           onToggleControls={engine.toggleControls}
           onNext={engine.next}
           onPrev={engine.prev}
-          onImageLoad={handleImageLoad}
+          onImageLoad={() => {}}
         />
       )}
 

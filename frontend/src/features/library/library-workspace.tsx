@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BarChart3, Compass, Workflow } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui';
-import { useDownloads, useKcc, useLibrary } from '@/hooks';
+import { useDownloads, useKcc } from '@/hooks';
 import { ExploreView } from './explore-view';
 import { ConversionWizard } from './conversion-wizard';
 import { JobsView } from './jobs-view';

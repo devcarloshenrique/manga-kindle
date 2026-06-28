@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 
 interface DoublePageViewProps {
   pages: { src: string; index: number }[];
   currentPage: number;
   totalPages: number;
-  fit: 'width' | 'height' | 'contain';
   zoom: number;
   brightness: number;
   direction: 'ltr' | 'rtl';
@@ -18,7 +17,6 @@ export function DoublePageView({
   pages,
   currentPage,
   totalPages,
-  fit,
   zoom,
   brightness,
   direction,
@@ -59,7 +57,6 @@ export function DoublePageView({
       <PageImage
         src={pages[leftPage]?.src}
         alt={`Página ${leftPage + 1}`}
-        fit={fit}
         zoom={zoom}
         brightness={brightness}
       />
@@ -67,7 +64,6 @@ export function DoublePageView({
         <PageImage
           src={pages[rightPage]?.src}
           alt={`Página ${rightPage + 1}`}
-          fit={fit}
           zoom={zoom}
           brightness={brightness}
         />
@@ -82,13 +78,11 @@ export function DoublePageView({
 function PageImage({
   src,
   alt,
-  fit,
   zoom,
   brightness,
 }: {
   src?: string;
   alt: string;
-  fit: string;
   zoom: number;
   brightness: number;
 }) {

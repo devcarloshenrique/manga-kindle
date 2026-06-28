@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import type { ReadingDirection, ReadingMode } from '@/lib/constants';
 
 interface ReaderEngineOptions {

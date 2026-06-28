@@ -63,7 +63,6 @@ export function DownloadsPage() {
     retryDownload,
     clearError,
     fetchDownloads,
-    getItem,
   } = useDownloads();
 
   const groups = groupDownloads(downloads);

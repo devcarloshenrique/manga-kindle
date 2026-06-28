@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
 
 interface SinglePageViewProps {
   src: string;

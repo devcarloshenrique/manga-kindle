@@ -13,21 +13,17 @@ import {
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  Badge,
   Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
   Skeleton,
-  Slider,
-  Switch,
   Tabs,
   TabsContent,
   TabsList,
@@ -38,29 +34,11 @@ import { useSystemStats } from '@/hooks/use-system-stats';
 import { useTheme } from '@/app/providers/theme-provider';
 import { ROUTES } from '@/lib/constants';
 
-function formatBytes(bytes?: number) {
-  if (!bytes || Number.isNaN(bytes)) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let size = bytes;
-  let i = 0;
-  while (size >= 1024 && i < units.length - 1) {
-    size /= 1024;
-    i++;
-  }
-  return `${size.toFixed(size > 10 ? 0 : 1)} ${units[i]}`;
-}
-
 function formatUptime(seconds?: number) {
   if (!seconds) return '—';
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   return `${h}h ${m}m`;
-}
-
-function statusColor(status?: string) {
-  if (status === 'connected') return 'success';
-  if (status === 'error') return 'destructive';
-  return 'secondary';
 }
 
 export function SettingsPage() {

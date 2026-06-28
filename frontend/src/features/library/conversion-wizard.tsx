@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  CheckCircle2,
   FolderSync,
   HardDrive,
   Loader2,
@@ -9,7 +8,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -47,7 +45,6 @@ export function ConversionWizard() {
     profiles,
     presets,
     jobs,
-    loading: kccLoading,
     submitting,
     error: kccError,
     convertManga,

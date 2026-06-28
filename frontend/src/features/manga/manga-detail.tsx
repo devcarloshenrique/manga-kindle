@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
   BookOpen,
-  Calendar,
   Download,
   ExternalLink,
   Heart,
@@ -20,7 +19,6 @@ import {
   CardHeader,
   CardTitle,
   Input,
-  Progress,
   Select,
   SelectContent,
   SelectItem,
