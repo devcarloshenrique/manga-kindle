@@ -240,7 +240,9 @@ function DownloadRow({ item, onCancel, onRetry, onClearError }: DownloadRowProps
   const isFailed = data.status === 'failed';
   const progress = data.progress.percentage;
 
-  const slug = data.mangaTitle?.toLowerCase().replace(/\s+/g, '-');
+  const openInLibraryHref = data.mangaTitle
+    ? `/?search=${encodeURIComponent(data.mangaTitle)}`
+    : '/';
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border/50 p-3 sm:flex-row sm:items-center">
@@ -273,9 +275,9 @@ function DownloadRow({ item, onCancel, onRetry, onClearError }: DownloadRowProps
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        {isCompleted && slug && (
+        {isCompleted && (
           <Button variant="ghost" size="icon" asChild title="Abrir na biblioteca">
-            <Link to={`/manga/${slug}`}>
+            <Link to={openInLibraryHref}>
               <FolderOpen className="h-4 w-4" />
             </Link>
           </Button>

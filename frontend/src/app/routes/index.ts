@@ -5,3 +5,4 @@ export { ReaderPage } from './reader';
 export { DownloadsPage } from './downloads';
 export { ConvertPage } from './convert';
 export { SettingsPage } from './settings';
+export { StubPage } from './stub';
