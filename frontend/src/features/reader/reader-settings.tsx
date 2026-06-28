@@ -37,6 +37,7 @@ interface ReaderSettingsProps {
   onFitChange: (fit: 'width' | 'height' | 'contain') => void;
   onZoomChange: (zoom: number) => void;
   onBrightnessChange: (brightness: number) => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ReaderSettings({
@@ -50,37 +51,64 @@ export function ReaderSettings({
   onFitChange,
   onZoomChange,
   onBrightnessChange,
+  onOpenChange,
 }: ReaderSettingsProps) {
   const [open, setOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
+  const handleToggle = () => {
+    const next = !open;
+    setOpen(next);
+    onOpenChange?.(next);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    onOpenChange?.(false);
+  };
+
   useEffect(() => {
     if (!open) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(e.target as Node)
-      ) {
-        setOpen(false);
+      const path = e.composedPath();
+      const insidePopover = popoverRef.current && path.includes(popoverRef.current);
+      // Radix Select/Switch/Tabs render content in Portals (outside the popover).
+      // composedPath() returns the real DOM path, so if the click landed on a
+      // Radix portal element we must NOT close the panel.
+      const insidePortal = path.some(
+        (el) =>
+          el instanceof HTMLElement &&
+          (el.hasAttribute('data-radix-select-content') ||
+            el.hasAttribute('data-radix-popper-content-wrapper') ||
+            el.hasAttribute('data-radix-switch-root') ||
+            el.closest('[data-radix-select-content],[data-radix-popper-content-wrapper]')),
+      );
+      if (!insidePopover && !insidePortal) {
+        handleClose();
       }
     };
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') handleClose();
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    // Delay registration so the same mousedown that opened the panel
+    // doesn't immediately close it.
+    const timerId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
     document.addEventListener('keydown', handleKey);
     return () => {
+      clearTimeout(timerId);
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKey);
     };
   }, [open]);
 
   return (
-    <div className="relative">
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
       <Button
         variant="glass"
         size="icon"
-        onClick={() => setOpen((v) => !v)}
+        onClick={handleToggle}
         aria-label="Configurações do reader"
       >
         <SlidersHorizontal className="h-5 w-5" />
@@ -89,7 +117,8 @@ export function ReaderSettings({
       {open && (
         <div
           ref={popoverRef}
-          className="absolute bottom-full right-0 mb-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur-xl z-50 zoom-in-95"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-full right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur-xl z-50 zoom-in-95"
         >
           <Tabs defaultValue="display" onValueChange={() => {}}>
             <TabsList className="grid w-full grid-cols-2">

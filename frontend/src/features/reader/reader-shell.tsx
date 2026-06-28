@@ -165,6 +165,8 @@ export function ReaderShell({
         onClose={onClose}
         onToggleFullscreen={handleToggleFullscreen}
         isFullscreen={isFullscreen}
+        onPauseAutoHide={engine.pauseAutoHide}
+        onResumeAutoHide={engine.resumeAutoHide}
       />
 
       {/* Chapter navigation floating buttons */}

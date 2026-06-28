@@ -31,6 +31,8 @@ interface ReaderControlsProps {
   onClose: () => void;
   onToggleFullscreen: () => void;
   isFullscreen: boolean;
+  onPauseAutoHide: () => void;
+  onResumeAutoHide: () => void;
 }
 
 export function ReaderControls({
@@ -55,6 +57,8 @@ export function ReaderControls({
   onClose,
   onToggleFullscreen,
   isFullscreen,
+  onPauseAutoHide,
+  onResumeAutoHide,
 }: ReaderControlsProps) {
   const progress = totalPages > 1 ? ((currentPage + 1) / totalPages) * 100 : 100;
 
@@ -88,6 +92,10 @@ export function ReaderControls({
                 onFitChange={onFitChange}
                 onZoomChange={onZoomChange}
                 onBrightnessChange={onBrightnessChange}
+                onOpenChange={(open) => {
+                  if (open) onPauseAutoHide();
+                  else onResumeAutoHide();
+                }}
               />
               <Button variant="glass" size="icon" onClick={onToggleFullscreen}>
                 {isFullscreen ? (

@@ -20,7 +20,7 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
+  defaultTheme = 'dark',
   storageKey = 'mangalivre-theme',
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
