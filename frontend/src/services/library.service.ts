@@ -9,6 +9,8 @@ import type {
   LibraryStats,
 } from './types';
 
+export type { LibraryMangaDetails };
+
 export interface LibraryPageRef {
   index: number;
   name: string;

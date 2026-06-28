@@ -102,7 +102,7 @@ export function ExploreView({ activeDownloads }: ExploreViewProps) {
   };
 
   const getChapterOrdinal = (chapterName: string) => {
-    const idx = (selectedManga?.chapters ?? []).findIndex((c) => c.name === chapterName);
+    const idx = (selectedManga?.chapters ?? []).findIndex((c: { name: string }) => c.name === chapterName);
     if (idx < 0) return 1;
     const extracted = selectedManga?.chapters[idx].name.match(/\d+/)?.[0];
     const n = extracted ? Number.parseInt(extracted, 10) : NaN;
@@ -153,7 +153,7 @@ export function ExploreView({ activeDownloads }: ExploreViewProps) {
 
   const chapterListItems = useMemo<ChapterListItem[]>(() => {
     const chapters = selectedManga?.chapters ?? [];
-    return chapters.map((chapter) => {
+    return chapters.map((chapter: { name: string; pageCount: number; converted?: boolean; downloadedAt?: string }) => {
       const isCurrentDownloading =
         activeDownloadForSelectedManga?.data.progress.currentChapter === chapter.name;
       const hasError = (activeDownloadForSelectedManga?.data.errors ?? []).some(
@@ -202,9 +202,9 @@ export function ExploreView({ activeDownloads }: ExploreViewProps) {
   const currentReading = useMemo<QuickAccessCurrentReading | null>(() => {
     if (!selectedManga) return null;
     const currentChapter =
-      selectedManga.chapters.find((c) => c.converted) ?? selectedManga.chapters[0];
+      selectedManga.chapters.find((c: { converted?: boolean }) => c.converted) ?? selectedManga.chapters[0];
     if (!currentChapter) return null;
-    const hasOffline = selectedManga.chapters.some((c) => c.pageCount > 0);
+    const hasOffline = selectedManga.chapters.some((c: { pageCount: number }) => c.pageCount > 0);
     return {
       mangaTitle: selectedManga.info.title,
       chapterLabel: currentChapter.name,

@@ -84,7 +84,7 @@ export function ConversionWizard() {
 
   const selectedMangaOption = mangas.find((m) => m.slug === resolvedMangaSlug);
 
-  const chapterOptions = (resolvedMangaDetails?.chapters ?? []).map((c) => ({
+  const chapterOptions = (resolvedMangaDetails?.chapters ?? []).map((c: { name: string; pageCount: number }) => ({
     value: c.name,
     label: `${c.name} • ${c.pageCount} pág.`,
   }));
@@ -99,8 +99,8 @@ export function ConversionWizard() {
     const chapters = resolvedMangaDetails?.chapters ?? [];
     if (!chapters.length || conversionMode !== 'selected') return [] as string[];
     return chapters
-      .filter((c) => selectedChapterNames.includes(c.name))
-      .map((c) =>
+      .filter((c: { name: string }) => selectedChapterNames.includes(c.name))
+      .map((c: { path: string; name: string }) =>
         c.path.startsWith('downloads/')
           ? c.path.replace(/^downloads\//, '')
           : `${resolvedMangaSlug}/${c.name}`,
@@ -161,8 +161,8 @@ export function ConversionWizard() {
     }
 
     const chapters = resolvedMangaDetails?.chapters ?? [];
-    const startIndex = chapters.findIndex((c) => c.name === effectiveRangeStartChapter);
-    const endIndex = chapters.findIndex((c) => c.name === effectiveRangeEndChapter);
+    const startIndex = chapters.findIndex((c: { name: string }) => c.name === effectiveRangeStartChapter);
+    const endIndex = chapters.findIndex((c: { name: string }) => c.name === effectiveRangeEndChapter);
     const startChapter =
       conversionMode === 'range' && startIndex >= 0
         ? Math.min(startIndex, endIndex) + 1
@@ -342,7 +342,7 @@ export function ConversionWizard() {
                     <SelectValue placeholder="Capítulo inicial" />
                   </SelectTrigger>
                   <SelectContent>
-                    {chapterOptions.map((o) => (
+                    {chapterOptions.map((o: { value: string; label: string }) => (
                       <SelectItem key={`start-${o.value}`} value={o.value}>
                         {o.label}
                       </SelectItem>
@@ -360,7 +360,7 @@ export function ConversionWizard() {
                     <SelectValue placeholder="Capítulo final" />
                   </SelectTrigger>
                   <SelectContent>
-                    {chapterOptions.map((o) => (
+                    {chapterOptions.map((o: { value: string; label: string }) => (
                       <SelectItem key={`end-${o.value}`} value={o.value}>
                         {o.label}
                       </SelectItem>
@@ -381,7 +381,7 @@ export function ConversionWizard() {
                     size="sm"
                     onClick={() =>
                       setSelectedChapterNames(
-                        (resolvedMangaDetails?.chapters ?? []).map((c) => c.name),
+                        (resolvedMangaDetails?.chapters ?? []).map((c: { name: string }) => c.name),
                       )
                     }
                   >
@@ -397,7 +397,7 @@ export function ConversionWizard() {
                 </div>
               </div>
               <div className="max-h-52 space-y-1 overflow-auto">
-                {(resolvedMangaDetails?.chapters ?? []).map((c) => {
+                {(resolvedMangaDetails?.chapters ?? []).map((c: { name: string; pageCount: number }) => {
                   const checked = selectedChapterNames.includes(c.name);
                   return (
                     <label
