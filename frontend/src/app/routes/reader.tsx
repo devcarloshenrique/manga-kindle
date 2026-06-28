@@ -5,6 +5,7 @@ import { Button } from '@/components/ui';
 import { ReaderShell } from '@/features/reader';
 import { useReader } from '@/hooks/use-reader';
 import { useReaderProgress } from '@/hooks/use-reader-progress';
+import type { ReadingDirection, ReadingMode } from '@/lib/constants';
 
 export function ReaderPage() {
   const { slug, chapter } = useParams<{ slug: string; chapter: string }>();
@@ -13,6 +14,9 @@ export function ReaderPage() {
 
   const { manga, pages, loading, error } = useReader(slug, decodedChapter);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
+  const savedMode = (localStorage.getItem('reader-mode') as ReadingMode) || 'single';
+  const savedDirection = (localStorage.getItem('reader-direction') as ReadingDirection) || 'ltr';
 
   useReaderProgress({
     slug,
@@ -96,6 +100,8 @@ export function ReaderPage() {
     <div className="h-screen w-full overflow-hidden bg-background">
       <ReaderShell
         pageUrls={pageUrls}
+        initialMode={savedMode}
+        initialDirection={savedDirection}
         onPageChange={setCurrentPageIndex}
         onClose={() => navigate(-1)}
         onPrevChapter={handlePrevChapter}

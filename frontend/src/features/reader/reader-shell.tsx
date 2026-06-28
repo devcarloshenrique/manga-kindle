@@ -101,7 +101,7 @@ export function ReaderShell({
   }
 
   return (
-    <div className="relative h-full w-full bg-background">
+    <div className="relative h-full w-full bg-black">
       {engine.mode === 'webtoon' ? (
         <WebtoonView
           urls={pageUrls}
