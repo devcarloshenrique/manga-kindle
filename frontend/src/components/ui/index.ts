@@ -33,3 +33,6 @@ export {
 export { Checkbox } from './checkbox';
 export { Switch } from './switch';
 export { Slider } from './slider';
+
+export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from './dialog';
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';

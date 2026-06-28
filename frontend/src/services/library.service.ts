@@ -9,6 +9,14 @@ import type {
   LibraryStats,
 } from './types';
 
+export type { LibraryMangaDetails };
+
+export interface LibraryPageRef {
+  index: number;
+  name: string;
+  url: string;
+}
+
 function unwrap<T>(envelope: ApiEnvelope<T>): T {
   if (envelope.error) {
     throw new Error(envelope.error.message || 'Erro ao processar resposta da API');
@@ -59,6 +67,23 @@ export const libraryService = {
   async deleteManga(slug: string): Promise<{ message: string; deleted: boolean }> {
     const response = await http.delete<ApiEnvelope<{ message: string; deleted: boolean }>>(
       `/api/library/mangas/${slug}`,
+    );
+    return unwrap(response.data);
+  },
+
+  /** Returns ordered page references for a chapter. */
+  async getChapterPages(slug: string, chapter: string): Promise<LibraryPageRef[]> {
+    const response = await http.get<ApiEnvelope<LibraryPageRef[]>>(
+      `/api/library/mangas/${slug}/chapters/${encodeURIComponent(chapter)}/pages`,
+    );
+    return unwrap(response.data);
+  },
+
+  /** Updates library manga metadata (lastReadChapter, lastReadAt, etc.). */
+  async updateManga(slug: string, body: Record<string, unknown>): Promise<LibraryMangaDetails> {
+    const response = await http.patch<ApiEnvelope<LibraryMangaDetails>>(
+      `/api/library/mangas/${slug}`,
+      body,
     );
     return unwrap(response.data);
   },
