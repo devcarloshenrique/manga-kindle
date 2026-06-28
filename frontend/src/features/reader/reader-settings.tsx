@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   BookOpen,
   Columns2,
@@ -52,6 +52,28 @@ export function ReaderSettings({
   onBrightnessChange,
 }: ReaderSettingsProps) {
   const [open, setOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
 
   return (
     <div className="relative">
@@ -65,7 +87,10 @@ export function ReaderSettings({
       </Button>
 
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 w-[calc(100vw-2rem)] sm:w-80 rounded-2xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur-xl z-50 zoom-in-95">
+        <div
+          ref={popoverRef}
+          className="absolute bottom-full right-0 mb-2 w-[calc(100vw-2rem)] sm:w-80 max-w-[calc(100vw-2rem)] rounded-2xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur-xl z-50 zoom-in-95"
+        >
           <Tabs defaultValue="display" onValueChange={() => {}}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="display">Visualização</TabsTrigger>

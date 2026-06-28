@@ -1,8 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
+  BarChart3,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
   Download,
+  FolderOpen,
+  HelpCircle,
+  History,
   Menu,
   Moon,
   Search,
@@ -37,13 +44,6 @@ const navItems: NavItem[] = [
     description: 'Seus mangás baixados',
   },
   {
-    to: ROUTES.SEARCH,
-    icon: Search,
-    label: 'Buscar',
-    shortLabel: 'Buscar',
-    description: 'Encontrar novo mangá por URL',
-  },
-  {
     to: ROUTES.DOWNLOADS,
     icon: Download,
     label: 'Downloads',
@@ -52,11 +52,42 @@ const navItems: NavItem[] = [
     badge: undefined,
   },
   {
+    to: ROUTES.SEARCH,
+    icon: Search,
+    label: 'Buscar',
+    shortLabel: 'Buscar',
+    description: 'Encontrar novo mangá por URL',
+  },
+  {
+    to: '/history',
+    icon: Clock,
+    label: 'Histórico',
+    shortLabel: 'Histórico',
+    description: 'Histórico de leitura',
+  },
+  {
+    to: '/folders',
+    icon: FolderOpen,
+    label: 'Pastas',
+    shortLabel: 'Pastas',
+    description: 'Organizar em pastas',
+  },
+  {
     to: ROUTES.CONVERT,
     icon: Wand2,
     label: 'Converter',
     shortLabel: 'Converter',
     description: 'Converter para Kindle/e-reader',
+  },
+];
+
+const bottomItems: NavItem[] = [
+  {
+    to: '/stats',
+    icon: BarChart3,
+    label: 'Estatísticas',
+    shortLabel: 'Stats',
+    description: 'Estatísticas do acervo',
   },
   {
     to: ROUTES.SETTINGS,
@@ -65,9 +96,16 @@ const navItems: NavItem[] = [
     shortLabel: 'Config.',
     description: 'Conectores, tema e preferências',
   },
+  {
+    to: '/help',
+    icon: HelpCircle,
+    label: 'Ajuda',
+    shortLabel: 'Ajuda',
+    description: 'Ajuda e suporte',
+  },
 ];
 
-const mobileTabItems = navItems.slice(0, 4);
+const mobileTabItems = navItems.slice(0, 5);
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -86,14 +124,15 @@ export function AppLayout() {
   const toggleTheme = () =>
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
 
+  const allNavItems = useMemo(() => [...navItems, ...bottomItems], []);
   const currentNavItem = useMemo(
     () =>
-      navItems.find((item) =>
+      allNavItems.find((item) =>
         item.to === ROUTES.HOME
           ? location.pathname === item.to
           : location.pathname.startsWith(item.to),
       ),
-    [location.pathname],
+    [location.pathname, allNavItems],
   );
 
   useEffect(() => {
@@ -132,8 +171,8 @@ export function AppLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-full flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-out lg:translate-x-0',
-          sidebarCollapsed ? 'w-20' : 'w-64',
+          'fixed left-0 top-0 z-50 flex h-full flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 ease-in-out lg:translate-x-0',
+          sidebarCollapsed ? 'w-16' : 'w-64',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         aria-label="Menu lateral"
@@ -141,27 +180,25 @@ export function AppLayout() {
         {/* Brand */}
         <div
           className={cn(
-            'flex items-center gap-3 border-b border-sidebar-border p-5',
-            sidebarCollapsed && 'justify-center px-3',
+            'flex items-center border-b border-sidebar-border h-16 px-4',
+            sidebarCollapsed && 'justify-center',
           )}
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent font-bold text-primary-foreground shadow-lg shadow-primary/30">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Zap className="h-5 w-5" />
           </div>
           {!sidebarCollapsed && (
-            <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold tracking-tight">MangaFlow</h1>
-              <p className="text-xs text-sidebar-foreground/50">
-                Download & Leitura
-              </p>
+            <div className="ml-3 flex flex-col min-w-0">
+              <h1 className="text-base font-bold tracking-tight truncate">MangaFlow</h1>
+              <p className="text-[11px] text-muted-foreground truncate">Download & Conversão</p>
             </div>
           )}
           <Button
             variant="ghost"
             size="icon"
             className={cn(
-              'text-sidebar-foreground hover:bg-sidebar-accent',
-              sidebarCollapsed ? 'hidden' : 'lg:hidden',
+              'ml-auto text-sidebar-foreground hover:bg-sidebar-accent',
+              sidebarCollapsed && 'hidden',
             )}
             onClick={() => setSidebarOpen(false)}
             aria-label="Fechar menu"
@@ -172,10 +209,10 @@ export function AppLayout() {
 
         {/* Navigation */}
         <nav
-          className="flex-1 overflow-y-auto p-3"
+          className="flex-1 overflow-y-auto p-2"
           aria-label="Navegação principal"
         >
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             {navItems.map((item) => {
               const isActive =
                 item.to === ROUTES.HOME
@@ -192,26 +229,23 @@ export function AppLayout() {
                   onClick={() => setSidebarOpen(false)}
                   title={sidebarCollapsed ? item.label : undefined}
                   className={cn(
-                    'group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-200',
+                    'flex items-center gap-3 h-10 justify-start rounded-lg px-3 text-sm transition-all',
                     sidebarCollapsed && 'justify-center px-2',
-                    isActive
-                      ? 'bg-sidebar-accent text-primary font-medium'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                    isActive && 'bg-sidebar-accent text-sidebar-primary font-medium',
+                    !isActive && 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground',
                   )}
                 >
                   <item.icon
                     className={cn(
-                      'h-5 w-5 shrink-0 transition-colors',
-                      isActive
-                        ?             'text-primary'
-                        : 'text-sidebar-foreground/50 group-hover:text-sidebar-foreground',
+                      'h-5 w-5 shrink-0',
+                      isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground',
                     )}
                   />
                   {!sidebarCollapsed && (
                     <>
-                      <span className="flex-1 font-medium">{item.label}</span>
+                      <span className="truncate">{item.label}</span>
                       {badgeCount > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">
+                        <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground">
                           {badgeCount}
                         </span>
                       )}
@@ -223,29 +257,57 @@ export function AppLayout() {
           </div>
         </nav>
 
-        {/* Footer */}
-        <div className={cn('border-t border-sidebar-border p-3', sidebarCollapsed && 'px-2')}>
-          <Button
-            variant="ghost"
-            className={cn(
-              'w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
-              sidebarCollapsed && 'justify-center px-2',
-            )}
-            onClick={toggleTheme}
-          >
-            {resolvedTheme === 'dark' ? (
-              <Sun className="h-5 w-5" />
-            ) : (
-              <Moon className="h-5 w-5" />
-            )}
-            {!sidebarCollapsed && (
-              <span className="text-sm">
-                {resolvedTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
-              </span>
-            )}
-          </Button>
+        {/* Bottom section */}
+        <div className={cn('border-t border-sidebar-border p-2', sidebarCollapsed && 'px-1')}>
+          <div className="flex flex-col gap-1">
+            {bottomItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.to);
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setSidebarOpen(false)}
+                  title={sidebarCollapsed ? item.label : undefined}
+                  className={cn(
+                    'flex items-center gap-3 h-10 justify-start rounded-lg px-3 text-sm transition-all',
+                    sidebarCollapsed && 'justify-center px-2',
+                    isActive && 'bg-sidebar-accent text-sidebar-primary font-medium',
+                    !isActive && 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                  )}
+                >
+                  <item.icon className="h-5 w-5 shrink-0 text-sidebar-foreground" />
+                  {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                </NavLink>
+              );
+            })}
+          </div>
+
+          <div className="mt-2 flex flex-col gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'w-full text-sidebar-foreground hover:bg-sidebar-accent',
+                sidebarCollapsed && 'justify-center px-2',
+                !sidebarCollapsed && 'justify-start gap-3 h-10 px-3',
+              )}
+              onClick={toggleTheme}
+            >
+              {resolvedTheme === 'dark' ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+              {!sidebarCollapsed && (
+                <span className="text-sm">
+                  {resolvedTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                </span>
+              )}
+            </Button>
+          </div>
+
           {!sidebarCollapsed && (
-            <div className="mt-3 flex items-center gap-2 px-3">
+            <div className="mt-2 flex items-center gap-2 px-3">
               <Sparkles className="h-3.5 w-3.5 text-sidebar-foreground/40" />
               <span className="text-[11px] text-sidebar-foreground/40">
                 v2.0 — Redesign
@@ -255,15 +317,38 @@ export function AppLayout() {
         </div>
       </aside>
 
+      {/* Collapse toggle button (outside sidebar, positioned relative to aside via left-64 or left-16) */}
+      <div
+        className={cn(
+          'fixed top-20 z-40 hidden lg:block transition-all duration-300 ease-in-out',
+          sidebarCollapsed ? 'left-16' : 'left-64',
+        )}
+      >
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 -translate-x-1/2 rounded-full border border-border bg-background shadow-md hover:bg-secondary"
+          onClick={() => setSidebarCollapsed((c) => !c)}
+          aria-label={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+          title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="h-3 w-3" />
+          ) : (
+            <ChevronLeft className="h-3 w-3" />
+          )}
+        </Button>
+      </div>
+
       {/* Main content */}
       <div
         className={cn(
           'transition-all duration-300 ease-out',
-          sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72',
+          sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-64',
         )}
       >
         {/* Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-8">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -271,17 +356,6 @@ export function AppLayout() {
               className="lg:hidden"
               onClick={() => setSidebarOpen(true)}
               aria-label="Abrir menu"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden lg:inline-flex"
-              onClick={() => setSidebarCollapsed((c) => !c)}
-              aria-label={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
-              title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
             >
               <Menu className="h-5 w-5" />
             </Button>

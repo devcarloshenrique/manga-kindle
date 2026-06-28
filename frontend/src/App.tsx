@@ -10,7 +10,9 @@ import {
   DownloadsPage,
   ConvertPage,
   SettingsPage,
+  StubPage,
 } from '@/app/routes';
+import { BarChart3, Clock, FolderOpen, HelpCircle } from 'lucide-react';
 
 export function App() {
   return (
@@ -25,6 +27,10 @@ export function App() {
           <Route path={ROUTES.DOWNLOADS} element={<DownloadsPage />} />
           <Route path={ROUTES.CONVERT} element={<ConvertPage />} />
           <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
+          <Route path="/history" element={<StubPage title="Histórico" description="Seu histórico de leitura será exibido aqui em breve." icon={Clock} />} />
+          <Route path="/folders" element={<StubPage title="Pastas" description="Organize seus mangás em pastas em breve." icon={FolderOpen} />} />
+          <Route path="/stats" element={<StubPage title="Estatísticas" description="Estatísticas do seu acervo serão exibidas aqui." icon={BarChart3} />} />
+          <Route path="/help" element={<StubPage title="Ajuda" description="Central de ajuda e suporte em construção." icon={HelpCircle} />} />
           {/* Legacy redirects */}
           <Route path={ROUTES.LIBRARY} element={<Navigate to={ROUTES.HOME} replace />} />
           <Route path={ROUTES.CONNECTORS} element={<Navigate to={ROUTES.SETTINGS} replace />} />
