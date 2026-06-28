@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ========================================
+   MangaFlow Redesign — Premium Dark-First
+   ======================================== */
+
+/* ========================================
    DESIGN SYSTEM - MangaFlow Reference
    Tokens em oklch para gamut amplo
    ======================================== */
@@ -140,32 +144,97 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
+  html {
+    color-scheme: dark;
+  }
+  html.light {
+    color-scheme: light;
+  }
 }
 
 /* ========================================
-   Scrollbar customizada
+   Glassmorphism utilities
    ======================================== */
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.glass {
+  background: color-mix(in oklch, var(--card) 70%, transparent);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--muted);
-}
-
-::-webkit-scrollbar-thumb {
-  background: color-mix(in oklch, var(--muted-foreground) 40%, transparent);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+.glass-strong {
+  background: color-mix(in oklch, var(--card) 85%, transparent);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
 
 /* ========================================
-   Skeleton loading animation
+   Premium gradient border (animated)
+   ======================================== */
+
+.gradient-border {
+  position: relative;
+  isolation: isolate;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, var(--primary), var(--accent), var(--primary));
+  background-size: 200% 200%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: gradient-rotate 6s linear infinite;
+}
+
+@keyframes gradient-rotate {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* ========================================
+   Manga cover gradient overlay
+   ======================================== */
+
+.cover-gradient {
+  background: linear-gradient(
+    to top,
+    oklch(0 0 0 / 0.95) 0%,
+    oklch(0 0 0 / 0.6) 40%,
+    oklch(0 0 0 / 0.1) 70%,
+    transparent 100%
+  );
+}
+
+/* ========================================
+   Reader full-bleed background
+   ======================================== */
+
+.reader-bg {
+  background: oklch(0.06 0.01 280);
+}
+
+/* ========================================
+   Hover lift (cards)
+   ======================================== */
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -12px oklch(0 0 0 / 0.5),
+              0 4px 12px -4px oklch(0.55 0.25 280 / 0.2);
+}
+
+/* ========================================
+   Shimmer skeleton (premium)
    ======================================== */
 
 @keyframes skeleton-loading {
@@ -177,30 +246,57 @@
   background: linear-gradient(
     90deg,
     var(--muted) 25%,
-    var(--secondary) 50%,
+    color-mix(in oklch, var(--secondary) 80%, transparent) 50%,
     var(--muted) 75%
   );
   background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
+  animation: skeleton-loading 1.6s infinite ease-in-out;
 }
 
 /* ========================================
-   Gradient border utility
+   Scrollbar (premium)
    ======================================== */
 
-.gradient-border {
-  position: relative;
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground) 30%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--muted-foreground) 55%, transparent);
+  background-clip: content-box;
+}
+
+/* ========================================
+   Focus ring premium
+   ======================================== */
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ========================================
+   Page transition wrapper
+   ======================================== */
+
+.page-enter {
+  animation: page-fade-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

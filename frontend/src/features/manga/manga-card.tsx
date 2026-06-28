@@ -1,74 +1,100 @@
 import { Link } from 'react-router-dom';
-import { BookOpen } from 'lucide-react';
-import type { Manga } from '@/services/types';
-import { ROUTES } from '@/lib/constants';
+import { BookOpen, CheckCircle2 } from 'lucide-react';
+import type { LibraryManga, Manga } from '@/services/types';
+import { cn } from '@/lib/utils';
 
 interface MangaCardProps {
-  manga: Manga;
+  /** External manga (search results). Slug is synthesized from title if missing. */
+  manga?: Manga;
+  /** Library manga (downloaded). */
+  libraryManga?: LibraryManga;
+  className?: string;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { color: string; label: string }> = {
   ongoing: { color: 'bg-emerald-500/90', label: 'Em andamento' },
   completed: { color: 'bg-blue-500/90', label: 'Completo' },
   hiatus: { color: 'bg-amber-500/90', label: 'Hiato' },
-  unknown: { color: 'bg-gray-500/90', label: 'Desconhecido' },
+  Emandamento: { color: 'bg-emerald-500/90', label: 'Em andamento' },
+  Completo: { color: 'bg-blue-500/90', label: 'Completo' },
+  Hiato: { color: 'bg-amber-500/90', label: 'Hiato' },
 };
 
-export function MangaCard({ manga }: MangaCardProps) {
-  const status = statusConfig[manga.status as keyof typeof statusConfig] || statusConfig.unknown;
+export function MangaCard({ manga, libraryManga, className }: MangaCardProps) {
+  const data = libraryManga ?? manga;
+  if (!data) return null;
+
+  const isLibrary = Boolean(libraryManga);
+  const title = data.title;
+  const coverUrl = data.coverUrl;
+  const author = data.author;
+  const totalChapters = data.totalChapters;
+  const status = isLibrary
+    ? statusConfig[(data as LibraryManga).status ?? '']
+    : statusConfig[(data as Manga).status ?? 'unknown'];
+  const hasConverted = isLibrary ? (data as LibraryManga).hasConverted : false;
+  const href = isLibrary
+    ? `/manga/${(data as LibraryManga).slug}`
+    : `/search?url=${encodeURIComponent((data as Manga).url)}`;
 
   return (
     <Link
-      to={`${ROUTES.MANGA}?url=${encodeURIComponent(manga.url)}`}
-      className="group relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02]"
+      to={href}
+      state={!isLibrary ? { manga: data } : undefined}
+      className={cn(
+        'group relative overflow-hidden rounded-2xl border border-border/50 bg-card hover-lift',
+        className,
+      )}
     >
-      {/* Cover Image */}
-      <div className="aspect-[3/4] w-full overflow-hidden bg-muted">
-        {manga.coverUrl ? (
+      <div className="aspect-[2/3] w-full overflow-hidden bg-muted">
+        {coverUrl ? (
           <img
-            src={manga.coverUrl}
-            alt={manga.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            src={coverUrl}
+            alt={title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
             loading="lazy"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary/30 via-accent/20 to-primary/10">
-            <BookOpen className="h-16 w-16 text-primary/40" />
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5">
+            <BookOpen className="h-14 w-14 text-primary/30" />
           </div>
         )}
-      </div>
 
-      {/* Gradient Overlay */}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+        <div className="cover-gradient absolute inset-0" />
 
-      {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <h3 className="line-clamp-2 text-sm font-bold leading-tight text-white drop-shadow-lg">
-          {manga.title}
-        </h3>
-
-        {manga.author && (
-          <p className="mt-1 truncate text-xs text-white/80">
-            {manga.author}
-          </p>
+        {hasConverted && (
+          <div className="absolute right-2 top-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-success/90 px-2 py-0.5 text-[10px] font-semibold text-success-foreground shadow-sm backdrop-blur-sm">
+              <CheckCircle2 className="h-3 w-3" />
+              Convertido
+            </span>
+          </div>
         )}
 
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {manga.status && (
-            <span
-              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-white ${status.color}`}
-            >
-              {status.label}
-            </span>
+        <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
+          <h3 className="line-clamp-2 text-sm font-bold leading-tight text-white drop-shadow-lg">
+            {title}
+          </h3>
+          {author && (
+            <p className="mt-1 truncate text-xs text-white/70">{author}</p>
           )}
-          <span className="inline-flex items-center rounded-full bg-black/50 px-2 py-0.5 text-[10px] text-white/90">
-            {manga.totalChapters} cap.
-          </span>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {status && (
+              <span
+                className={cn(
+                  'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm',
+                  status.color,
+                )}
+              >
+                {status.label}
+              </span>
+            )}
+            <span className="inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
+              {totalChapters} cap.
+            </span>
+          </div>
         </div>
       </div>
-
-      {/* Hover Effect Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-accent/0 opacity-0 transition-opacity duration-300 group-hover:opacity-10" />
     </Link>
   );
 }

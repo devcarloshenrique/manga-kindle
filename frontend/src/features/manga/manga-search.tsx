@@ -66,6 +66,7 @@ export function MangaSearch() {
         </div>
       )}
 
+
       {!loading && !error && !manga && (
         <div className="space-y-6">
           <EmptyState
