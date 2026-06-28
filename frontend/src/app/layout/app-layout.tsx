@@ -133,7 +133,7 @@ export function AppLayout() {
       <aside
         className={cn(
           'fixed left-0 top-0 z-50 flex h-full flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 ease-out lg:translate-x-0',
-          sidebarCollapsed ? 'w-20' : 'w-72',
+          sidebarCollapsed ? 'w-20' : 'w-64',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
         aria-label="Menu lateral"
@@ -195,15 +195,15 @@ export function AppLayout() {
                     'group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-200',
                     sidebarCollapsed && 'justify-center px-2',
                     isActive
-                      ? 'bg-gradient-to-r from-sidebar-primary/25 to-transparent text-sidebar-primary border-l-2 border-sidebar-primary'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground border-l-2 border-transparent',
+                      ? 'bg-sidebar-accent text-primary font-medium'
+                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
                   )}
                 >
                   <item.icon
                     className={cn(
                       'h-5 w-5 shrink-0 transition-colors',
                       isActive
-                        ? 'text-sidebar-primary'
+                        ?             'text-primary'
                         : 'text-sidebar-foreground/50 group-hover:text-sidebar-foreground',
                     )}
                   />
@@ -263,7 +263,7 @@ export function AppLayout() {
         )}
       >
         {/* Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border/60 glass-strong px-4 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-8">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"

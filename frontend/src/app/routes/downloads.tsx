@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { libraryService } from '@/services/library.service';
 import {
   BookOpen,
   CheckCircle2,
@@ -240,7 +242,24 @@ function DownloadRow({ item, onCancel, onRetry, onClearError }: DownloadRowProps
   const isFailed = data.status === 'failed';
   const progress = data.progress.percentage;
 
-  const slug = data.mangaTitle?.toLowerCase().replace(/\s+/g, '-');
+  const [resolvedSlug, setResolvedSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isCompleted || !data.mangaTitle) return;
+    let active = true;
+    async function resolve() {
+      try {
+        const result = await libraryService.listMangas({ search: data.mangaTitle, limit: 1 });
+        if (active && result.mangas.length > 0) {
+          setResolvedSlug(result.mangas[0].slug);
+        }
+      } catch {
+        // slug resolution failed — link won't appear
+      }
+    }
+    resolve();
+    return () => { active = false; };
+  }, [isCompleted, data.mangaTitle]);
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border/50 p-3 sm:flex-row sm:items-center">
@@ -273,9 +292,9 @@ function DownloadRow({ item, onCancel, onRetry, onClearError }: DownloadRowProps
       </div>
 
       <div className="flex shrink-0 items-center gap-1">
-        {isCompleted && slug && (
+        {isCompleted && resolvedSlug && (
           <Button variant="ghost" size="icon" asChild title="Abrir na biblioteca">
-            <Link to={`/manga/${slug}`}>
+            <Link to={`/manga/${resolvedSlug}`}>
               <FolderOpen className="h-4 w-4" />
             </Link>
           </Button>

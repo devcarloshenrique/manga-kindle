@@ -34,10 +34,20 @@ interface ReaderEngine {
 
 export function useReaderEngine(opts: ReaderEngineOptions): ReaderEngine {
   const { totalPages, initialPage = 0, autoHideMs = 3000 } = opts;
-  const [mode, setMode] = useState<ReadingMode>(opts.mode ?? 'single');
-  const [direction, setDirection] = useState<ReadingDirection>(
+  const [mode, setModeRaw] = useState<ReadingMode>(opts.mode ?? 'single');
+  const [direction, setDirectionRaw] = useState<ReadingDirection>(
     opts.direction ?? 'ltr',
   );
+
+  const setMode = useCallback((m: ReadingMode) => {
+    setModeRaw(m);
+    localStorage.setItem('reader-mode', m);
+  }, []);
+
+  const setDirection = useCallback((d: ReadingDirection) => {
+    setDirectionRaw(d);
+    localStorage.setItem('reader-direction', d);
+  }, []);
   const [page, setPage] = useState(initialPage);
   const [zoom, setZoom] = useState(1);
   const [fit, setFit] = useState<'width' | 'height' | 'contain'>('contain');

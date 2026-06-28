@@ -65,7 +65,7 @@ export function ReaderSettings({
       </Button>
 
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 w-80 rounded-2xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur-xl z-50 zoom-in-95">
+        <div className="absolute bottom-full right-0 mb-2 w-[calc(100vw-2rem)] sm:w-80 rounded-2xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur-xl z-50 zoom-in-95">
           <Tabs defaultValue="display" onValueChange={() => {}}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="display">Visualização</TabsTrigger>
